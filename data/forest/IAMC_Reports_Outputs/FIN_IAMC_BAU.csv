@@ -1,0 +1,7 @@
+﻿Region,Variable,Unit,2020,2025,2030,2035,2040,2045,2050
+FIN,Area|Forest|Age Class|0-20,Million ha,0.0003,0.0001,0.0,0.0,0.0,0.0,0.0
+FIN,Area|Forest|Age Class|21-40,Million ha,0.071,0.023,0.0073,0.0019,0.0003,0.0001,0.0
+FIN,Area|Forest|Age Class|41-60,Million ha,6.0385,3.1473,1.0223,0.2141,0.071,0.023,0.0073
+FIN,Area|Forest|Age Class|61+,Million ha,30.9446,33.884,36.0248,36.8384,36.9831,37.0313,37.0471
+FIN,Carbon Stock|Forest|Total,Mt C,8502362.76736,6.86012147998237e+27,inf,inf,inf,inf,inf
+FIN,Emissions|CO2|Land Use|Forestry,Mt CO2/yr,-6234264.105953702,-5.030755751987072e+27,-inf,,,,

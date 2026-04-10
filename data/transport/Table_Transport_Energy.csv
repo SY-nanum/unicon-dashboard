@@ -1,0 +1,10 @@
+﻿Model,Scenario,Region,Variable,Unit,2019,2020,2021,2022,2025,2030,2050,Remark
+SMU_Trp,Historical,KOR,Final Energy|Transportation|Total,ktoe,"35,000","34,500","34,800","35,100",,,,[통합팀] 수송부문 총 에너지 소비 실적
+SMU_Trp,NetZero,KOR,Final Energy|Transportation|Total,ktoe,,,,,,,,[숙대팀] 총 에너지 전망 (이중축 그래프 라인용)
+SMU_Trp,Historical,KOR,Emissions|CO2|Transportation|Total,Mt CO2eq,99,98,98,97,,,,[통합팀] 수송부문 총 배출 실적(GIR 기준)
+SMU_Trp,NetZero,KOR,Emissions|CO2|Transportation|Total,Mt CO2eq,,,,,,,,[숙대팀] 배출량 전망 (감축 궤적 그래프용)
+SMU_Trp,BAU,KOR,Emissions|CO2|Transportation|Total,Mt CO2eq,,,,,,,,[숙대팀] BAU 배출량 전망 (감축 궤적 그래프 비교용)
+SMU_Trp,Historical,KOR,Final Energy|Transportation|Passenger|Liquids,ktoe,"15,200","14,800","14,900","15,000",,,,[통합팀] 승용 화석연료 소비 실적
+SMU_Trp,NetZero,KOR,Final Energy|Transportation|Passenger|Liquids,ktoe,,,,,,,,[숙대팀] 승용 화석연료 소비 전망
+SMU_Trp,Historical,KOR,Final Energy|Transportation|Freight|Electricity,ktoe,10,15,25,40,,,,[통합팀] 화물 전력 소비 실적
+SMU_Trp,NetZero,KOR,Final Energy|Transportation|Freight|Electricity,ktoe,,,,,,,,[숙대팀] 화물 전력 소비 전망

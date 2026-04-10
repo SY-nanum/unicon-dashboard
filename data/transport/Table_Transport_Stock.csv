@@ -1,0 +1,15 @@
+﻿Model,Scenario,Region,Variable,Unit,2019,2020,2021,2022,2025,2030,2035,2040,2045,2050,Remark
+SMU_Trp,Historical,KOR,Stock|Transportation|Total|ICEV,Thousand,23000,23500,23800,24000,,,,,,,[통합팀] 국토부 실적 전체 합산
+SMU_Trp,NetZero,KOR,Stock|Transportation|Total|ICEV,Thousand,,,,,,,,,,,[숙대팀] 여기서부터 전망치 기입
+SMU_Trp,Historical,KOR,Stock|Transportation|Total|BEV,Thousand,90,130,230,390,,,,,,,[통합팀] 국토부 실적 전체 합산
+SMU_Trp,NetZero,KOR,Stock|Transportation|Total|BEV,Thousand,,,,,,,,,,,[숙대팀] 여기서부터 전망치 기입
+SMU_Trp,Historical,KOR,Stock|Transportation|Passenger|ICEV,Thousand,19500,19800,20000,20200,,,,,,,[통합팀] 승용 내연기관 실적
+SMU_Trp,NetZero,KOR,Stock|Transportation|Passenger|ICEV,Thousand,,,,,,,,,,,[숙대팀] 승용 내연기관 전망치
+SMU_Trp,Historical,KOR,Stock|Transportation|Passenger|BEV,Thousand,85,120,210,350,,,,,,,[통합팀] 승용 전기차 실적
+SMU_Trp,NetZero,KOR,Stock|Transportation|Passenger|BEV,Thousand,,,,,,,,,,,[숙대팀] 승용 전기차 전망치
+SMU_Trp,Historical,KOR,Stock|Transportation|Bus|ICEV,Thousand,800,810,815,820,,,,,,,[통합팀] 승합 내연기관 실적
+SMU_Trp,NetZero,KOR,Stock|Transportation|Bus|ICEV,Thousand,,,,,,,,,,,[숙대팀] 승합 내연기관 전망치
+SMU_Trp,Historical,KOR,Stock|Transportation|Bus|BEV,Thousand,5,10,19,39,,,,,,,[통합팀] 승합 전기차 실적
+SMU_Trp,NetZero,KOR,Stock|Transportation|Bus|BEV,Thousand,,,,,,,,,,,[숙대팀] 승합 전기차 전망치
+SMU_Trp,Historical,KOR,Stock|Transportation|Freight|FCEV,Thousand,0,0,0.1,0.5,,,,,,,[통합팀] 화물 수소차 실적
+SMU_Trp,NetZero,KOR,Stock|Transportation|Freight|FCEV,Thousand,,,,,,,,,,,[숙대팀] 화물 수소차 전망치

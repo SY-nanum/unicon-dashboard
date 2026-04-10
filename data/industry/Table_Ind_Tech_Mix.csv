@@ -1,0 +1,36 @@
+﻿Model,Scenario,Region,Variable,Unit,2020,2021,2022,2025,2030,2035,2040,2045,2050,Remark
+SNU_Ind,Historical,KOR,Production|Steel|Total,Mt,70.5,70,69.5,,,,,,,[통합팀] WSA 수요량(demand) 실적
+SNU_Ind,NetZero,KOR,Production|Steel|Total,Mt,,,,67.49,69.88,72.36,74.93,77.59,80.34,[산업팀] 목표 생산량 전망치
+SNU_Ind,Historical,KOR,Capacity|Steel|BF-BOF,Mt,48,47.5,47,,,,,,,[통합팀] MPP DB 기반 고로 과거용량(past_cap)
+SNU_Ind,NetZero,KOR,Capacity|Steel|BF-BOF,Mt,,,,143.58,159.59,182.96,182.96,182.96,182.96,[산업팀] 고로(BF) 용량 전망
+SNU_Ind,Historical,KOR,Capacity|Steel|EAF,Mt,23.5,23.5,24,,,,,,,[통합팀] MPP DB 기반 전기로(EAF) 과거용량
+SNU_Ind,NetZero,KOR,Capacity|Steel|EAF,Mt,,,,147.77,147.77,147.77,155.16,177.28,177.28,[산업팀] 전기로(EAF) 용량 전망
+SNU_Ind,Historical,KOR,Capacity|Steel|DRI-H2,Mt,0,0,0,,,,,,,[통합팀] 수소환원제철 실적(0으로 고정)
+SNU_Ind,NetZero,KOR,Capacity|Steel|DRI-H2,Mt,,,,0,0,13.34,13.34,13.34,13.34,[산업팀] 수소환원제철(DRI-H2) 용량 전망
+SNU_Ind,Historical,KOR,Emissions|CO2|Steel|Total,Mt CO2,95,94.5,93,,,,,,,[통합팀] EIA 총배출량(emmission_sum) 실적
+SNU_Ind,BAU,KOR,Emissions|CO2|Steel|Total,Mt CO2,,,,120.49,123.8,120.59,117.9,117.69,116.78,[산업팀] BAU 배출 전망 (워터폴 차트 시작점)
+SNU_Ind,NetZero,KOR,Emissions|CO2|Steel|Total,Mt CO2,,,,81.28,66.5,54.41,44.52,36.42,29.8,[산업팀] NZ 배출 전망 (워터폴 차트 종착점)
+SNU_Ind,NetZero,KOR,Emissions Reduction|Steel|Efficiency,Mt CO2,,,,12.67,4.27,7.18,8.16,9.9,12.71,[산업팀] 감축 분해: 효율개선 기여도
+SNU_Ind,NetZero,KOR,Emissions Reduction|Steel|Fuel Switch,Mt CO2,,,,26.54,47.05,34.12,43.22,54.55,58.02,[산업팀] 감축 분해: 연료전환 기여도
+SNU_Ind,NetZero,KOR,Emissions Reduction|Steel|CCUS,Mt CO2,,,,0,0,12.15,12.81,10.76,11.6,[산업팀] 감축 분해: CCUS 기여도
+SNU_Ind,NetZero,KOR,Emissions Reduction|Steel|Hydrogen,Mt CO2,,,,0,5.97,12.74,9.19,6.04,4.65,[산업팀] 감축 분해: 수소환원제철 기여도
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,

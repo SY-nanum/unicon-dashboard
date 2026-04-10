@@ -1,0 +1,7 @@
+﻿Variable,Unit,2020,2025,2030,2035,2040,2045,2050,Region
+Area|Forest|Age Class|0-20,Million ha,0.0097,0.0083,0.0062,0.0007,0.0,0.0,0.0,Middle East & North Africa
+Area|Forest|Age Class|21-40,Million ha,0.1156,0.0525,0.0166,0.011800000000000001,0.0097,0.0083,0.0062,Middle East & North Africa
+Area|Forest|Age Class|41-60,Million ha,1.9464,1.1485,0.6122000000000001,0.2809,0.1156,0.0525,0.0166,Middle East & North Africa
+Area|Forest|Age Class|61+,Million ha,12.6572,13.5196,14.093900000000001,14.4355,14.6036,14.6681,14.7061,Middle East & North Africa
+Carbon Stock|Forest|Total,Mt C,10796108.558302602,5.365599798454506e+27,inf,2.5141152095049645e+32,inf,7.635142051987242e+20,1.3292320902624534e+21,Middle East & North Africa
+Emissions|CO2|Land Use|Forestry,Mt CO2/yr,-7916807.749705685,-3.934773185533304e+27,-inf,inf,-inf,inf,-4.14859782380068e+20,Middle East & North Africa

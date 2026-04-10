@@ -1,0 +1,56 @@
+1. Republic of Korea (1개국)
+
+KOR
+
+2. China (1개국)
+
+CHN
+
+3. Japan (1개국)
+
+JPN
+
+4. India (1개국)
+
+IND
+
+5. USA (1개국)
+
+USA
+
+6. Canada (1개국)
+
+CAN
+
+7. ASEAN (동남아시아 국가 연합, 10개국)
+
+BRN, IDN, KHM, LAO, MMR, MYS, PHL, SGP, THA, VNM
+
+8. Oceania (오세아니아, 8개국)
+
+AUS, FJI, NCL, NZL, PLW, PNG, SLB, VUT
+
+9. European Union & United Kingdom (유럽연합 및 영국, 27개국)
+
+AUT, BEL, BGR, CYP, CZE, DEU, DNK, ESP, EST, FIN, FRA, GBR, GRC, HRV, HUN, IRL, ITA, LTU, LUX, LVA, NLD, POL, PRT, ROU, SVK, SVN, SWE
+
+10. Russia and Neighboring Transition Countries (구소련 및 주변 전환국, 11개국)
+
+ARM, AZE, BLR, GEO, KAZ, KGZ, MDA, RUS, TJK, UKR, UZB
+
+11. Middle East & North Africa (중동 및 북아프리카, 13개국)
+
+DZA, EGY, IRN, IRQ, ISR, JOR, LBN, LBY, MAR, SDN, SYR, TUN, TUR
+
+12. Sub-Saharan Africa (사하라 이남 아프리카, 44개국)
+
+AGO, BDI, BEN, BFA, BWA, CAF, CIV, CMR, COD, COG, COM, CPV, ERI, ETH, GAB, GHA, GIN, GMB, GNB, GNQ, KEN, LBR, MDG, MLI, MOZ, MUS, MWI, NAM, NER, NGA, RWA, SEN, SLE, SOM, SSD, STP, SWZ, TCD, TGO, TZA, UGA, ZAF, ZMB, ZWE
+
+13. Latin America (중남미 및 카리브해, 48개국)
+
+AIA, ARG, ATG, BHS, BLM, BLZ, BOL, BRA, BRB, CHL, COL, CRI, CUB, CUW, CYM, DMA, DOM, ECU, FLK, GLP, GRD, GTM, GUF, GUY, HND, HTI, JAM, KNA, LCA, MAF, MEX, MSR, MTQ, NIC, PAN, PER, PRI, PRY, SLV, SUR, SXM, TCA, TTO, URY, VCT, VEN, VGB, VIR
+
+14. ROW (Rest of the World, 나머지 30개 지역)
+(남아시아, 비EU 유럽 국가, 특정 도서 국가 및 속령 등)
+
+AFG, ALB, AND, ATF, BES, BGD, BIH, BTN, CHE, GGY, IMN, ISL, JEY, LIE, LKA, MDV, MKD, MNE, MNG, MYT, NOR, NPL, PAK, PRK, REU, SMR, SPM, SRB, TLS, TWN

@@ -1,0 +1,7 @@
+﻿Variable,Unit,2020,2025,2030,2035,2040,2045,2050,Region
+Area|Forest|Age Class|0-20,Million ha,2.9074999999999998,1.986,1.1903000000000001,0.0864,0.0,0.0,0.0,European Union & United Kingdom
+Area|Forest|Age Class|21-40,Million ha,5.8389,4.7259,3.9728,3.8356,2.9074999999999998,1.986,1.1903000000000001,European Union & United Kingdom
+Area|Forest|Age Class|41-60,Million ha,29.658099999999997,18.404799999999998,11.0767,7.6053,5.8389,4.7259,3.9728,European Union & United Kingdom
+Area|Forest|Age Class|61+,Million ha,133.1321,146.41989999999998,155.2968,160.0093,162.7902,164.8247,166.3735,European Union & United Kingdom
+Carbon Stock|Forest|Total,Mt C,8615656.566248626,6.872516133392318e+27,inf,inf,inf,inf,inf,European Union & United Kingdom
+Emissions|CO2|Land Use|Forestry,Mt CO2/yr,-6312534.976803232,-5.039845164487701e+27,-inf,-inf,-1.1719923200366213e+23,-3.656602905518564e+23,-4.429851164778253e+23,European Union & United Kingdom

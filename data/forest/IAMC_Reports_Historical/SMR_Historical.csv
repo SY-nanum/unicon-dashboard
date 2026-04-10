@@ -1,0 +1,7 @@
+﻿Region,Scenario,Variable,Unit,2017,2018,2019,2020,2021,2022,2023,2024
+SMR,Historical,Area|Forest|Age Class|0-20,Million ha,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+SMR,Historical,Area|Forest|Age Class|21-40,Million ha,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+SMR,Historical,Area|Forest|Age Class|41-60,Million ha,0.0003,0.0003,0.0003,0.0003,0.0003,0.0003,0.0003,0.0003
+SMR,Historical,Area|Forest|Age Class|61+,Million ha,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+SMR,Historical,Carbon Stock|Forest|Total,Mt C,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+SMR,Historical,Emissions|CO2|Land Use|Forestry,Mt CO2/yr,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0

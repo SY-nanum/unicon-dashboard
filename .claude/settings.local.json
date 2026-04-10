@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(bkit:dynamic)",
+      "Bash(pdftotext -layout \"UNICON 통합DB 및 UI 구축방안 1.0.pdf\" -)",
+      "Bash(ls *.pdf)",
+      "Bash(xargs -I {} pdftotext -layout {} {}.txt)",
+      "Bash(ls *.txt)",
+      "Bash(python -c ':*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm test:*)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/industry/process-mix sleep 2 curl -s http://localhost:3000/industry/process-mix echo \"--- markers ---\" grep -oE '철강 공정기술 점유율 변화|점유율 \\\\\\(%\\\\\\)|BF-BOF|EAF|DRI-H2|Historical \\\\\\(실측\\\\\\)|NetZero \\\\\\(모델 예측\\\\\\)|100% 정규화' /tmp/page3.html)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/industry/cbam)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

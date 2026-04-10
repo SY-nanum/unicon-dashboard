@@ -1,0 +1,7 @@
+﻿Variable,Unit,2020,2025,2030,2035,2040,2045,2050,Region
+Area|Forest|Age Class|0-20,Million ha,2.7705,1.3271,0.2339,0.0,0.0,0.0,0.0,Republic of Korea
+Area|Forest|Age Class|21-40,Million ha,3.0511,4.2782,4.9611,4.3508,2.7705,1.3271,0.2339,Republic of Korea
+Area|Forest|Age Class|41-60,Million ha,0.2196,0.4273,0.8114,1.5875,3.0511,4.2782,4.9611,Republic of Korea
+Area|Forest|Age Class|61+,Million ha,0.0056,0.0142,0.0404,0.1085,0.2252,0.4415,0.8518,Republic of Korea
+Carbon Stock|Forest|Total,Mt C,276.514112,321.656992,358.36352,386.923008,408.488672,424.457472,436.146944,Republic of Korea
+Emissions|CO2|Land Use|Forestry,Mt CO2/yr,-38.18230279490784,-33.10477866666666,-26.91812053333333,-20.943624533333324,-15.814820266666686,-11.710453333333325,-8.572279466666682,Republic of Korea

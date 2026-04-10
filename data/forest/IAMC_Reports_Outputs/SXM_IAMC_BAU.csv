@@ -1,0 +1,7 @@
+﻿Region,Variable,Unit,2020,2025,2030,2035,2040,2045,2050
+SXM,Area|Forest|Age Class|0-20,Million ha,0.0001,0.0,0.0,0.0,0.0,0.0,0.0
+SXM,Area|Forest|Age Class|21-40,Million ha,0.0,0.0001,0.0001,0.0001,0.0001,0.0,0.0
+SXM,Area|Forest|Age Class|41-60,Million ha,0.0,0.0,0.0,0.0,0.0,0.0001,0.0001
+SXM,Area|Forest|Age Class|61+,Million ha,0.0002,0.0002,0.0002,0.0002,0.0002,0.0002,0.0002
+SXM,Carbon Stock|Forest|Total,Mt C,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+SXM,Emissions|CO2|Land Use|Forestry,Mt CO2/yr,0.0,0.0,0.0,0.0,0.0,0.0,0.0

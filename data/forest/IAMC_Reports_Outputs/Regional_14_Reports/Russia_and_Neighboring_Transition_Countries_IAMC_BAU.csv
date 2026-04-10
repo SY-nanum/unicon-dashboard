@@ -1,0 +1,7 @@
+﻿Variable,Unit,2020,2025,2030,2035,2040,2045,2050,Region
+Area|Forest|Age Class|0-20,Million ha,4.3016,3.4995,2.5783,0.3044,0.0,0.0,0.0,Russia and Neighboring Transition Countries
+Area|Forest|Age Class|21-40,Million ha,16.8024,8.5166,5.265899999999999,5.2221,4.3016,3.4995,2.5783,Russia and Neighboring Transition Countries
+Area|Forest|Age Class|41-60,Million ha,136.8938,94.1748,59.486900000000006,33.1569,16.8024,8.5166,5.265899999999999,Russia and Neighboring Transition Countries
+Area|Forest|Age Class|61+,Million ha,1290.0188,1341.8257,1380.6855,1409.3332,1426.9126,1436.0005,1440.1724,Russia and Neighboring Transition Countries
+Carbon Stock|Forest|Total,Mt C,1764495849842.3245,5.277538511920393e+21,2.396097318918896e+28,1.2522638572426591e+31,1.6127901783186408e+32,inf,inf,Russia and Neighboring Transition Countries
+Emissions|CO2|Land Use|Forestry,Mt CO2/yr,-1293963568384.908,-3.870194907447658e+21,-1.7571376468543663e+28,-9.165696906107429e+30,-1.0908801145692082e+32,-inf,-304225649888.0836,Russia and Neighboring Transition Countries

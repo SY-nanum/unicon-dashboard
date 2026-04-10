@@ -1,0 +1,7 @@
+﻿Region,Scenario,Variable,Unit,2020,2025,2030,2035,2040,2045,2050
+ERI,NetZero,Area|Forest|Age Class|0-20,Million ha,0.0001,3.289425352741528e-06,6.578850705483058e-06,9.868276058224585e-06,9.429686011192386e-06,7.894620846579668e-06,6.140260658450854e-06
+ERI,NetZero,Area|Forest|Age Class|21-40,Million ha,0.0,0.0001,0.0001,0.0001,0.00010263154028219324,5.920965634934752e-06,9.21039098767628e-06
+ERI,NetZero,Area|Forest|Age Class|41-60,Million ha,0.0,0.0,0.0,0.0,0.0,0.0001,0.0001
+ERI,NetZero,Area|Forest|Age Class|61+,Million ha,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ERI,NetZero,Carbon Stock|Forest|Total,Mt C,0.0,,,,,,
+ERI,NetZero,Emissions|CO2|Land Use|Forestry,Mt CO2/yr,0.0,,,,,,
