@@ -27,3 +27,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# large data files
+data/forest/GeoTIFF_Historical/
+data/forest/GeoTIFF_Outputs/
+raw data/
