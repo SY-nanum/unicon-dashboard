@@ -5,6 +5,10 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['xlsx'],
   },
+  // Include data files in Vercel serverless function bundle
+  outputFileTracingIncludes: {
+    '/**': ['./data/**/*'],
+  },
 };
 
 export default nextConfig;
