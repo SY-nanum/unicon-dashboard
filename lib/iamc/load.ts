@@ -16,22 +16,36 @@ const cache = new Map<string, CacheEntry>();
 
 /**
  * Load an IAMC sheet from an .xlsx file and pivot to long format.
- * Caches by {absPath, sheetName, mtime}. Invalidates automatically when the file changes.
- *
- * @param relativePath path relative to project root (process.cwd())
- * @param sheetName    sheet name inside the workbook
+ * On Vercel, falls back to pre-built JSON cache in data-cache/.
  */
 export async function loadIamcSheet(
   relativePath: string,
   sheetName: string,
 ): Promise<IamcSheet> {
+  const cacheKey = `${relativePath}::${sheetName}`;
+
+  // Try pre-built JSON cache first (used in Vercel production)
+  const cacheFileName = cacheKey.replace(/[/\\:.]/g, '_') + '.json';
+  const jsonCachePath = path.resolve(process.cwd(), 'data-cache', cacheFileName);
+  try {
+    const jsonData = await readFile(jsonCachePath, 'utf-8');
+    const wideRows = JSON.parse(jsonData) as unknown[][];
+    const memCached = cache.get(cacheKey);
+    if (memCached) return memCached.sheet;
+    const sheet = pivotWideToLong(wideRows, { sourceFile: relativePath, sheetName });
+    cache.set(cacheKey, { sheet, mtimeMs: 0 });
+    return sheet;
+  } catch {
+    // JSON cache not found — fall through to xlsx
+  }
+
+  // Direct xlsx read (local dev)
   const absPath = path.resolve(process.cwd(), relativePath);
-  const cacheKey = `${absPath}::${sheetName}`;
   const { mtimeMs } = await stat(absPath);
 
-  const cached = cache.get(cacheKey);
-  if (cached && cached.mtimeMs === mtimeMs) {
-    return cached.sheet;
+  const memCached = cache.get(cacheKey);
+  if (memCached && (memCached as CacheEntry).mtimeMs === mtimeMs) {
+    return memCached.sheet;
   }
 
   const buffer = await readFile(absPath);
@@ -50,11 +64,7 @@ export async function loadIamcSheet(
     defval: null,
   });
 
-  const sheet = pivotWideToLong(wideRows, {
-    sourceFile: relativePath,
-    sheetName,
-  });
-
+  const sheet = pivotWideToLong(wideRows, { sourceFile: relativePath, sheetName });
   cache.set(cacheKey, { sheet, mtimeMs });
   return sheet;
 }

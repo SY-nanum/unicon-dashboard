@@ -1,7 +1,3 @@
 {
-  "functions": {
-    "app/**": {
-      "includeFiles": "data/**"
-    }
-  }
+  "buildCommand": "npm run build"
 }

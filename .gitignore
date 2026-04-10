@@ -28,6 +28,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# generated data cache (rebuilt at deploy time)
+data-cache/
+
 # large data files
 data/forest/GeoTIFF_Historical/
 data/forest/GeoTIFF_Outputs/
