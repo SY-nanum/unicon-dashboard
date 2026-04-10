@@ -7,7 +7,12 @@ const nextConfig = {
   },
   // Include data files in Vercel serverless function bundle
   outputFileTracingIncludes: {
-    '/**': ['./data/**/*'],
+    '/industry/**': ['./data/industry/**/*'],
+    '/energy/**': ['./data/energy/**/*'],
+    '/transport/**': ['./data/transport/**/*'],
+    '/building/**': ['./data/building/**/*'],
+    '/integrated/**': ['./data/integrated/**/*'],
+    '/forestry/**': ['./data/forest/**/*'],
   },
 };
 
