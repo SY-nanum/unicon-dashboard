@@ -21,24 +21,25 @@ const ENERGY_COLORS: Record<string, string> = {
 const ORDER = ['승용 액체연료', '버스 액체연료', '버스 전기', '화물 전기'];
 
 export function TransportEnergyMixChart({ rows, scenarios }: { rows: IamcRow[]; scenarios: string[] }) {
-  const [selected, setSelected] = useState<string>(
-    scenarios.find((s) => s === 'NetZero') ?? scenarios[0]
-  );
+  const projScenarios = scenarios.filter((s) => s !== 'Historical');
+  const [selected, setSelected] = useState<string>(projScenarios[0] ?? 'NetZero');
 
-  const activeScenarios = ['Historical', selected];
-  const filtered = rows
-    .filter((r) => activeScenarios.includes(r.scenario) && r.variable in VAR_TO_LABEL)
+  const labeled = rows
+    .filter((r) => r.variable in VAR_TO_LABEL)
     .map((r) => ({ ...r, variable: VAR_TO_LABEL[r.variable] }));
 
-  const years = [...new Set(filtered.map((r) => r.year))].sort((a, b) => a - b);
+  const historicalRows = labeled.filter((r) => r.scenario === 'Historical');
+  const projectionRows = labeled.filter((r) => r.scenario === selected);
+  const allYears = [...new Set([...historicalRows, ...projectionRows].map((r) => r.year))].sort((a, b) => a - b);
 
   const series = ORDER.map((label) => ({
     name: label,
     type: 'bar' as const,
     stack: 'total',
-    data: years.map((y) => {
-      const sc = y <= 2022 ? 'Historical' : selected;
-      return filtered.find((r) => r.year === y && r.scenario === sc && r.variable === label)?.value ?? null;
+    data: allYears.map((y) => {
+      const hist = historicalRows.find((r) => r.variable === label && r.year === y);
+      const proj = projectionRows.find((r) => r.variable === label && r.year === y);
+      return hist?.value ?? proj?.value ?? null;
     }),
     itemStyle: { color: ENERGY_COLORS[label] },
   }));
@@ -47,7 +48,7 @@ export function TransportEnergyMixChart({ rows, scenarios }: { rows: IamcRow[]; 
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { bottom: 0 },
     grid: { left: 70, right: 20, bottom: 60, top: 20 },
-    xAxis: { type: 'category', data: years.map(String) },
+    xAxis: { type: 'category', data: allYears.map(String) },
     yAxis: { type: 'value', name: '에너지 (ktoe)', nameLocation: 'middle', nameGap: 55 },
     series,
   };
@@ -56,16 +57,11 @@ export function TransportEnergyMixChart({ rows, scenarios }: { rows: IamcRow[]; 
     <div>
       <h2 className="text-xl font-semibold text-slate-800 text-center">차종별 에너지원 믹스</h2>
       <div className="mt-3 flex justify-center gap-2">
-        {scenarios.filter((s) => s !== 'Historical').map((s) => (
-          <button
-            key={s}
-            onClick={() => setSelected(s)}
+        {projScenarios.map((s) => (
+          <button key={s} onClick={() => setSelected(s)}
             className={`rounded-full px-3 py-1 text-sm font-medium transition ${
               selected === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            {s}
-          </button>
+            }`}>{s}</button>
         ))}
       </div>
       <ReactECharts option={option} style={{ height: 420, width: '100%' }} notMerge={true} />

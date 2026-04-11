@@ -27,7 +27,6 @@ export function TransportGhgChart({ rows, scenarios }: { rows: IamcRow[]; scenar
     symbol: 'circle',
     symbolSize: 5,
     connectNulls: false,
-    show: selected.includes(sc),
   }));
 
   const option = {
@@ -47,16 +46,12 @@ export function TransportGhgChart({ rows, scenarios }: { rows: IamcRow[]; scenar
       <h2 className="text-xl font-semibold text-slate-800 text-center">온실가스 배출 추이</h2>
       <div className="mt-3 flex justify-center gap-2">
         {scenarios.map((s) => (
-          <button
-            key={s}
-            onClick={() => setSelected((prev) =>
-              prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-            )}
+          <button key={s}
+            onClick={() => setSelected((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])}
             className={`rounded-full px-3 py-1 text-sm font-medium transition ${
               selected.includes(s) ? 'text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
-            style={selected.includes(s) ? { backgroundColor: SC_COLORS[s] ?? '#6366f1' } : {}}
-          >
+            style={selected.includes(s) ? { backgroundColor: SC_COLORS[s] ?? '#6366f1' } : {}}>
             {s}
           </button>
         ))}

@@ -19,28 +19,30 @@ const PT_COLORS: Record<string, string> = {
 const PT_ORDER = ['내연기관(ICEV)', '전기차(BEV)', '수소차(FCEV)'];
 
 export function TransportStockShareChart({ rows, scenarios }: { rows: IamcRow[]; scenarios: string[] }) {
-  const [selected, setSelected] = useState<string>(
-    scenarios.find((s) => s === 'NetZero') ?? scenarios[0]
-  );
+  const projScenarios = scenarios.filter((s) => s !== 'Historical');
+  const [selected, setSelected] = useState<string>(projScenarios[0] ?? 'NetZero');
 
-  const activeScenarios = ['Historical', selected];
-  const filtered = rows
-    .filter((r) => activeScenarios.includes(r.scenario) && r.variable in VAR_TO_LABEL)
+  const labeled = rows
+    .filter((r) => r.variable in VAR_TO_LABEL)
     .map((r) => ({ ...r, variable: VAR_TO_LABEL[r.variable] }));
 
-  const years = [...new Set(filtered.map((r) => r.year))].sort((a, b) => a - b);
+  const historicalRows = labeled.filter((r) => r.scenario === 'Historical');
+  const projectionRows = labeled.filter((r) => r.scenario === selected);
+  const allYears = [...new Set([...historicalRows, ...projectionRows].map((r) => r.year))].sort((a, b) => a - b);
 
-  // Calculate % share per year
   const series = PT_ORDER.map((pt) => ({
     name: pt,
     type: 'bar' as const,
     stack: 'share',
-    data: years.map((y) => {
-      const sc = y <= 2022 ? 'Historical' : selected;
-      const yearRows = filtered.filter((r) => r.year === y && (r.scenario === sc));
-      const total = yearRows.reduce((s, r) => s + (r.value ?? 0), 0);
-      const val = yearRows.find((r) => r.variable === pt)?.value ?? 0;
-      return total > 0 ? Math.round((val / total) * 1000) / 10 : null;
+    data: allYears.map((y) => {
+      const hist = historicalRows.find((r) => r.variable === pt && r.year === y);
+      const proj = projectionRows.find((r) => r.variable === pt && r.year === y);
+      const val = hist?.value ?? proj?.value ?? null;
+      // Calculate total for this year to get percentage
+      const totalHist = PT_ORDER.reduce((s, p) => s + (historicalRows.find((r) => r.variable === p && r.year === y)?.value ?? 0), 0);
+      const totalProj = PT_ORDER.reduce((s, p) => s + (projectionRows.find((r) => r.variable === p && r.year === y)?.value ?? 0), 0);
+      const total = totalHist || totalProj;
+      return val !== null && total > 0 ? Math.round((val / total) * 1000) / 10 : null;
     }),
     itemStyle: { color: PT_COLORS[pt] },
   }));
@@ -49,7 +51,7 @@ export function TransportStockShareChart({ rows, scenarios }: { rows: IamcRow[];
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { bottom: 0 },
     grid: { left: 60, right: 20, bottom: 60, top: 20 },
-    xAxis: { type: 'category', data: years.map(String) },
+    xAxis: { type: 'category', data: allYears.map(String) },
     yAxis: { type: 'value', name: '비율 (%)', nameLocation: 'middle', nameGap: 40, max: 100 },
     series,
   };
@@ -58,16 +60,11 @@ export function TransportStockShareChart({ rows, scenarios }: { rows: IamcRow[];
     <div>
       <h2 className="text-xl font-semibold text-slate-800 text-center">파워트레인별 차량 등록대수 구성비</h2>
       <div className="mt-3 flex justify-center gap-2">
-        {scenarios.filter((s) => s !== 'Historical').map((s) => (
-          <button
-            key={s}
-            onClick={() => setSelected(s)}
+        {projScenarios.map((s) => (
+          <button key={s} onClick={() => setSelected(s)}
             className={`rounded-full px-3 py-1 text-sm font-medium transition ${
               selected === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            {s}
-          </button>
+            }`}>{s}</button>
         ))}
       </div>
       <ReactECharts option={option} style={{ height: 420, width: '100%' }} notMerge={true} />

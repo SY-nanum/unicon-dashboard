@@ -19,24 +19,27 @@ const PT_COLORS: Record<string, string> = {
 const PT_ORDER = ['내연기관(ICEV)', '전기차(BEV)', '수소차(FCEV)'];
 
 export function TransportStockChart({ rows, scenarios }: { rows: IamcRow[]; scenarios: string[] }) {
-  const [selected, setSelected] = useState<string[]>(
-    scenarios.filter((s) => s !== 'Historical').slice(0, 1)
-  );
+  const projScenarios = scenarios.filter((s) => s !== 'Historical');
+  const [selected, setSelected] = useState<string>(projScenarios[0] ?? 'NetZero');
 
-  const activeScenarios = ['Historical', ...selected];
-  const filtered = rows
-    .filter((r) => activeScenarios.includes(r.scenario) && r.variable in VAR_TO_LABEL)
+  // Merge Historical + selected projection into one timeline
+  const labeled = rows
+    .filter((r) => r.variable in VAR_TO_LABEL)
     .map((r) => ({ ...r, variable: VAR_TO_LABEL[r.variable] }));
 
-  const years = [...new Set(filtered.map((r) => r.year))].sort((a, b) => a - b);
+  const historicalRows = labeled.filter((r) => r.scenario === 'Historical');
+  const projectionRows = labeled.filter((r) => r.scenario === selected);
+
+  const allYears = [...new Set([...historicalRows, ...projectionRows].map((r) => r.year))].sort((a, b) => a - b);
 
   const series = PT_ORDER.map((pt) => ({
     name: pt,
     type: 'bar' as const,
     stack: 'total',
-    data: years.map((y) => {
-      const sc = y <= 2022 ? 'Historical' : (selected[0] ?? 'NetZero');
-      return filtered.find((r) => r.scenario === sc && r.variable === pt && r.year === y)?.value ?? null;
+    data: allYears.map((y) => {
+      const hist = historicalRows.find((r) => r.variable === pt && r.year === y);
+      const proj = projectionRows.find((r) => r.variable === pt && r.year === y);
+      return hist?.value ?? proj?.value ?? null;
     }),
     itemStyle: { color: PT_COLORS[pt] },
   }));
@@ -45,7 +48,7 @@ export function TransportStockChart({ rows, scenarios }: { rows: IamcRow[]; scen
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { bottom: 0 },
     grid: { left: 70, right: 20, bottom: 60, top: 20 },
-    xAxis: { type: 'category', data: years.map(String) },
+    xAxis: { type: 'category', data: allYears.map(String) },
     yAxis: { type: 'value', name: '대수 (천대)', nameLocation: 'middle', nameGap: 50 },
     series,
   };
@@ -54,12 +57,12 @@ export function TransportStockChart({ rows, scenarios }: { rows: IamcRow[]; scen
     <div>
       <h2 className="text-xl font-semibold text-slate-800 text-center">파워트레인별 차량 보급 대수 및 총 에너지 수요</h2>
       <div className="mt-3 flex justify-center gap-2">
-        {scenarios.filter((s) => s !== 'Historical').map((s) => (
+        {projScenarios.map((s) => (
           <button
             key={s}
-            onClick={() => setSelected([s])}
+            onClick={() => setSelected(s)}
             className={`rounded-full px-3 py-1 text-sm font-medium transition ${
-              selected.includes(s) ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              selected === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
             {s}
