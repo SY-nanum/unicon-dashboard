@@ -21,7 +21,11 @@ const ENERGY_COLORS: Record<string, string> = {
 const ORDER = ['승용 액체연료', '버스 액체연료', '버스 전기', '화물 전기'];
 
 export function TransportEnergyMixChart({ rows, scenarios }: { rows: IamcRow[]; scenarios: string[] }) {
-  const projScenarios = scenarios.filter((s) => s !== 'Historical');
+  // Only show scenarios that actually have energy variable data (BAU has GHG data only)
+  const energyScenarios = scenarios.filter((s) =>
+    s !== 'Historical' && rows.some((r) => r.scenario === s && r.variable in VAR_TO_LABEL),
+  );
+  const projScenarios = energyScenarios.length > 0 ? energyScenarios : scenarios.filter((s) => s !== 'Historical');
   const [selected, setSelected] = useState<string>(projScenarios[0] ?? 'NetZero');
 
   const labeled = rows
