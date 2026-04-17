@@ -1,7 +1,7 @@
 import { loadIamcSheet } from '@/lib/iamc/load';
 import { TransportEnergyMixChart } from './TransportEnergyMixChart';
 
-const FILE = 'data/transport/SMU_Trip_20260411.xlsx';
+const FILE = 'data/transport/SMU_Trip_20260416.xlsx';
 
 export default async function EnergyMixPage() {
   const sheet = await loadIamcSheet(FILE, 'Table_Transport_Energy');
