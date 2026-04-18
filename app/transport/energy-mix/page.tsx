@@ -1,4 +1,5 @@
 import { loadIamcSheet } from '@/lib/iamc/load';
+import { UniconCard } from '@/components/ui/UniconCard';
 import { TransportEnergyMixChart } from './TransportEnergyMixChart';
 
 const FILE = 'data/transport/SMU_Trip_20260416.xlsx';
@@ -8,11 +9,12 @@ export default async function EnergyMixPage() {
   const rows = sheet.rows.filter((r) => r.region === 'KOR');
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <TransportEnergyMixChart rows={rows} scenarios={sheet.scenarios} />
-      </div>
-      <p className="text-xs text-slate-400">Source: {FILE} · Table_Transport_Energy</p>
-    </div>
+    <UniconCard
+      title="차종별 에너지원 믹스"
+      subtitle="단위: ktoe"
+      source={`${FILE} · Table_Transport_Energy`}
+    >
+      <TransportEnergyMixChart rows={rows} scenarios={sheet.scenarios} />
+    </UniconCard>
   );
 }

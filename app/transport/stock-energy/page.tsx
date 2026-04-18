@@ -1,4 +1,5 @@
 import { loadIamcSheet } from '@/lib/iamc/load';
+import { UniconCard } from '@/components/ui/UniconCard';
 import { TransportStockChart } from './TransportStockChart';
 
 const FILE = 'data/transport/SMU_Trip_20260416.xlsx';
@@ -8,11 +9,12 @@ export default async function StockEnergyPage() {
   const rows = sheet.rows.filter((r) => r.region === 'KOR');
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <TransportStockChart rows={rows} scenarios={sheet.scenarios} />
-      </div>
-      <p className="text-xs text-slate-400">Source: {FILE} · Table_Transport_Stock</p>
-    </div>
+    <UniconCard
+      title="파워트레인별 차량 보급 대수 및 총 에너지 수요"
+      subtitle="단위: 천 대 (Thousand vehicles)"
+      source={`${FILE} · Table_Transport_Stock`}
+    >
+      <TransportStockChart rows={rows} scenarios={sheet.scenarios} />
+    </UniconCard>
   );
 }

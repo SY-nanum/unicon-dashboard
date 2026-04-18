@@ -55,8 +55,7 @@ export function TransportStockChart({ rows, scenarios }: { rows: IamcRow[]; scen
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-slate-800 text-center">파워트레인별 차량 보급 대수 및 총 에너지 수요</h2>
-      <div className="mt-3 flex justify-center gap-2">
+      <div className="flex justify-center gap-2">
         {projScenarios.map((s) => (
           <button
             key={s}

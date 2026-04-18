@@ -59,8 +59,7 @@ export function TransportEnergyMixChart({ rows, scenarios }: { rows: IamcRow[]; 
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-slate-800 text-center">차종별 에너지원 믹스</h2>
-      <div className="mt-3 flex justify-center gap-2">
+      <div className="flex justify-center gap-2">
         {projScenarios.map((s) => (
           <button key={s} onClick={() => setSelected(s)}
             className={`rounded-full px-3 py-1 text-sm font-medium transition ${

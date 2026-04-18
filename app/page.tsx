@@ -34,7 +34,9 @@ export default async function HomePage({
               <div className="flex items-center gap-3">
                 <span className={`inline-block h-3 w-3 rounded-full ${c.dot}`} />
                 <h3 className={`text-lg font-semibold ${c.accent}`}>{sectorName(s.slug, lang)}</h3>
-                <span className="ml-auto text-xs text-slate-400">{s.charts.length}</span>
+                <span className="ml-auto text-xs text-slate-400">
+                  {s.charts.filter((ch) => ch.implemented).length}/{s.charts.length}
+                </span>
               </div>
               <ul className="mt-3 space-y-1 text-sm text-slate-600">
                 {s.charts.map((chart, i) => (

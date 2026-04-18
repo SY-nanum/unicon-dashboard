@@ -1,4 +1,5 @@
 import { loadIamcSheet } from '@/lib/iamc/load';
+import { UniconCard } from '@/components/ui/UniconCard';
 import { TransportGhgChart } from './TransportGhgChart';
 
 const FILE = 'data/transport/SMU_Trip_20260416.xlsx';
@@ -10,11 +11,12 @@ export default async function GhgTrendPage() {
   );
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <TransportGhgChart rows={rows} scenarios={sheet.scenarios} />
-      </div>
-      <p className="text-xs text-slate-400">Source: {FILE} · Table_Transport_Energy</p>
-    </div>
+    <UniconCard
+      title="온실가스 배출 추이"
+      subtitle="단위: Mt CO₂eq"
+      source={`${FILE} · Table_Transport_Energy`}
+    >
+      <TransportGhgChart rows={rows} scenarios={sheet.scenarios} />
+    </UniconCard>
   );
 }

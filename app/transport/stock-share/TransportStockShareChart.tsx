@@ -58,8 +58,7 @@ export function TransportStockShareChart({ rows, scenarios }: { rows: IamcRow[];
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-slate-800 text-center">파워트레인별 차량 등록대수 구성비</h2>
-      <div className="mt-3 flex justify-center gap-2">
+      <div className="flex justify-center gap-2">
         {projScenarios.map((s) => (
           <button key={s} onClick={() => setSelected(s)}
             className={`rounded-full px-3 py-1 text-sm font-medium transition ${
