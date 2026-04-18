@@ -3,6 +3,7 @@
 import { loadForestCountryScenarios } from '@/lib/iamc/load-csv';
 import { filterByVariablePattern } from '@/lib/iamc/filter';
 import { ProcessMixChart } from '@/components/charts/ProcessMixChart';
+import { UniconCard } from '@/components/ui/UniconCard';
 import { t, DEFAULT_LANG } from '@/lib/i18n';
 import type { Lang } from '@/lib/i18n';
 import type { IamcRow } from '@/lib/iamc/types';
@@ -57,21 +58,20 @@ export default async function ForestryAgeClassPage({
   );
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <ProcessMixChart
-          title={t('page.forestry.age-class', lang)}
-          subtitle={t('page.forestry.age-class.sub', lang, { region: countryCode })}
-          rows={displayRows}
-          projectionScenarios={PROJECTION_SCENARIOS}
-          defaultScenario={netZeroHasData ? 'NetZero' : 'BAU'}
-          projectionCutoff={PROJECTION_CUTOFF}
-          stackOrder={stackOrder}
-          stackColors={colors}
-          footer={legend}
-        />
-      </div>
-      <p className="text-xs text-slate-400">Source: data/forest/IAMC_Reports_* · {countryCode}</p>
-    </div>
+    <UniconCard
+      title={t('page.forestry.age-class', lang)}
+      subtitle={t('page.forestry.age-class.sub', lang, { region: countryCode })}
+      source={`data/forest/IAMC_Reports_* · ${countryCode}`}
+    >
+      <ProcessMixChart
+        rows={displayRows}
+        projectionScenarios={PROJECTION_SCENARIOS}
+        defaultScenario={netZeroHasData ? 'NetZero' : 'BAU'}
+        projectionCutoff={PROJECTION_CUTOFF}
+        stackOrder={stackOrder}
+        stackColors={colors}
+        footer={legend}
+      />
+    </UniconCard>
   );
 }

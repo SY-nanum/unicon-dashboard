@@ -5,6 +5,7 @@ import { loadForestCountryScenarios } from '@/lib/iamc/load-csv';
 import { filterByVariablePattern } from '@/lib/iamc/filter';
 import { MultiLineChart } from '@/components/charts/MultiLineChart';
 import { RegionSelector } from '@/components/layout/RegionSelector';
+import { UniconCard } from '@/components/ui/UniconCard';
 import { t, DEFAULT_LANG } from '@/lib/i18n';
 import type { Lang } from '@/lib/i18n';
 import type { IamcRow } from '@/lib/iamc/types';
@@ -39,30 +40,18 @@ export default async function ForestryAnnualFluxPage({
     }
   }
 
-  const years = [...new Set(merged.map((r) => r.year))].sort((a, b) => a - b);
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center"><Suspense fallback={null}><RegionSelector /></Suspense></div>
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-baseline justify-between">
-          <div className="text-center flex-1">
-            <h2 className="text-2xl font-semibold text-slate-800">{t('page.forestry.annual-flux', lang)}</h2>
-            <p className="mt-1 text-sm text-slate-500">{t('page.forestry.annual-flux.sub', lang, { region: countryCode })}</p>
-          </div>
-          <div className="text-xs text-slate-400">
-            {years.length > 0 && `${years[0]}–${years[years.length - 1]}`}
-          </div>
-        </div>
-        <div className="mt-4 border-t border-slate-200 pt-4">
-          {merged.length === 0 ? (
-            <p className="py-12 text-center text-slate-400">{countryCode} {t('ui.placeholder', lang)}</p>
-          ) : (
-            <MultiLineChart rows={merged} groupKey="scenario" groupColors={SCENARIO_COLORS} groupStyles={SCENARIO_STYLES} groupOrder={SCENARIO_ORDER} yAxisLabel={t('yaxis.net-flux', lang)} />
-          )}
-        </div>
-      </div>
-      <p className="text-xs text-slate-400">Source: data/forest/IAMC_Reports_* · {countryCode}</p>
-    </div>
+    <UniconCard
+      title={t('page.forestry.annual-flux', lang)}
+      subtitle={t('page.forestry.annual-flux.sub', lang, { region: countryCode })}
+      source={`data/forest/IAMC_Reports_* · ${countryCode}`}
+      headerActions={<Suspense fallback={null}><RegionSelector /></Suspense>}
+    >
+      {merged.length === 0 ? (
+        <p className="py-12 text-center text-slate-400">{countryCode} {t('ui.placeholder', lang)}</p>
+      ) : (
+        <MultiLineChart rows={merged} groupKey="scenario" groupColors={SCENARIO_COLORS} groupStyles={SCENARIO_STYLES} groupOrder={SCENARIO_ORDER} yAxisLabel={t('yaxis.net-flux', lang)} />
+      )}
+    </UniconCard>
   );
 }

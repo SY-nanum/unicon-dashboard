@@ -12,7 +12,7 @@ import type { Lang } from '@/lib/i18n';
 import type { IamcRow } from '@/lib/iamc/types';
 
 interface Props {
-  title: string;
+  title?: string;
   subtitle?: string;
   rows: IamcRow[];
   projectionScenarios: string[];
@@ -150,11 +150,13 @@ export function ProcessMixChart({
         </div>
       </div>
 
-      {/* Title — centered, below scenario selector */}
-      <div className="mt-3 text-center">
-        <h2 className="text-2xl font-semibold text-slate-800">{title}</h2>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
-      </div>
+      {/* Title — centered, below scenario selector (omitted when UniconCard provides the title) */}
+      {title && (
+        <div className="mt-3 text-center">
+          <h2 className="text-2xl font-semibold text-slate-800">{title}</h2>
+          {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        </div>
+      )}
 
       {/* Optional footer legend (Historical / Projection ranges) */}
       {footer && <div className="mt-3">{footer}</div>}

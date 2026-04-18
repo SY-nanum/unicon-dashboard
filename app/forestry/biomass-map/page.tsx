@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { ForestMapViewer } from '@/components/charts/ForestMapViewer';
 import { RegionSelector } from '@/components/layout/RegionSelector';
+import { UniconCard } from '@/components/ui/UniconCard';
 import { t, DEFAULT_LANG } from '@/lib/i18n';
 import type { Lang } from '@/lib/i18n';
 
@@ -43,22 +44,21 @@ export default async function BiomassMapPage({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center"><Suspense fallback={null}><RegionSelector /></Suspense></div>
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        {layers.length === 0 ? (
-          <p className="py-12 text-center text-slate-400">{countryCode} {t('ui.placeholder', lang)}</p>
-        ) : (
-          <ForestMapViewer
-            title={t('page.forestry.biomass-map', lang)}
-            subtitle={t('page.forestry.biomass-map.sub', lang, { region: countryCode })}
-            layers={layers}
-            defaultLayer="2024"
-            legendGradient="linear-gradient(to right, #f0fdf4, #86efac, #22c55e, #15803d, #052e16)"
-          />
-        )}
-      </div>
-      <p className="text-xs text-slate-400">Source: data/forest/GeoTIFF_Historical/{countryCode}_17Band_Historical.tif · Band: Biomass</p>
-    </div>
+    <UniconCard
+      title={t('page.forestry.biomass-map', lang)}
+      subtitle={t('page.forestry.biomass-map.sub', lang, { region: countryCode })}
+      source={`data/forest/GeoTIFF_Historical/${countryCode}_17Band_Historical.tif · Band: Biomass`}
+      headerActions={<Suspense fallback={null}><RegionSelector /></Suspense>}
+    >
+      {layers.length === 0 ? (
+        <p className="py-12 text-center text-slate-400">{countryCode} {t('ui.placeholder', lang)}</p>
+      ) : (
+        <ForestMapViewer
+          layers={layers}
+          defaultLayer="2024"
+          legendGradient="linear-gradient(to right, #f0fdf4, #86efac, #22c55e, #15803d, #052e16)"
+        />
+      )}
+    </UniconCard>
   );
 }

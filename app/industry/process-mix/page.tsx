@@ -1,5 +1,6 @@
 // Design Ref: page 19 "공정기술 점유율 변화"
 
+import { UniconCard } from '@/components/ui/UniconCard';
 import { loadIamcSheet } from '@/lib/iamc/load';
 import { filterByVariablePattern } from '@/lib/iamc/filter';
 import { ProcessMixChart } from '@/components/charts/ProcessMixChart';
@@ -32,10 +33,9 @@ export default async function IndustryProcessMixPage({
 
   if (capacityRows.length === 0) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-2xl font-semibold text-slate-800 text-center">{t('page.industry.process-mix', lang)}</h2>
+      <UniconCard title={t('page.industry.process-mix', lang)}>
         <p className="py-12 text-center text-slate-400">{countryCode} {t('ui.placeholder', lang)}</p>
-      </div>
+      </UniconCard>
     );
   }
 
@@ -56,22 +56,21 @@ export default async function IndustryProcessMixPage({
   );
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <ProcessMixChart
-          title={t('page.industry.process-mix', lang)}
-          subtitle={t('page.industry.process-mix.sub', lang, { region: countryCode })}
-          rows={displayRows}
-          projectionScenarios={PROJECTION_SCENARIOS}
-          defaultScenario={netZeroHasData ? 'NetZero' : 'BAU'}
-          projectionCutoff={PROJECTION_CUTOFF}
-          stackOrder={stackOrder}
-          stackColors={stackColors}
-          footer={legend}
-        />
-      </div>
-      <p className="text-xs text-slate-400">Source: data/industry/SNU_Ind_Submission.xlsx · Table_Ind_Tech_Mix</p>
-    </div>
+    <UniconCard
+      title={t('page.industry.process-mix', lang)}
+      subtitle={t('page.industry.process-mix.sub', lang, { region: countryCode })}
+      source="data/industry/SNU_Ind_Submission.xlsx · Table_Ind_Tech_Mix"
+    >
+      <ProcessMixChart
+        rows={displayRows}
+        projectionScenarios={PROJECTION_SCENARIOS}
+        defaultScenario={netZeroHasData ? 'NetZero' : 'BAU'}
+        projectionCutoff={PROJECTION_CUTOFF}
+        stackOrder={stackOrder}
+        stackColors={stackColors}
+        footer={legend}
+      />
+    </UniconCard>
   );
 }
 

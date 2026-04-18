@@ -7,6 +7,7 @@ import { findSector, SECTOR_COLOR_CLASSES } from '@/lib/sectors';
 import { sectorName, chartTitle, t, DEFAULT_LANG } from '@/lib/i18n';
 import type { Lang } from '@/lib/i18n';
 import { RegionSelector } from '@/components/layout/RegionSelector';
+import { UniconCard } from '@/components/ui/UniconCard';
 
 interface Params {
   sector: string;
@@ -30,16 +31,14 @@ export default async function DynamicChartPage({
   const colors = SECTOR_COLOR_CLASSES[sector.color];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center"><Suspense fallback={null}><RegionSelector /></Suspense></div>
-      <div>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className={`inline-block h-2 w-2 rounded-full ${colors.dot}`} />
-          <span className={colors.accent}>{sectorName(sector.slug, lang)}</span>
-        </div>
-        <h2 className="mt-1 text-2xl font-semibold text-slate-800 text-center">{chartTitle(chartSlug, lang).replace('\n', ' ')}</h2>
+    <UniconCard
+      title={chartTitle(chartSlug, lang).replace('\n', ' ')}
+      headerActions={<Suspense fallback={null}><RegionSelector /></Suspense>}
+    >
+      <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
+        <span className={`inline-block h-2 w-2 rounded-full ${colors.dot}`} />
+        <span className={colors.accent}>{sectorName(sector.slug, lang)}</span>
       </div>
-
       <div className="flex min-h-[300px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white p-12 text-center">
         <svg
           className="mb-4 h-12 w-12 text-slate-300"
@@ -56,6 +55,6 @@ export default async function DynamicChartPage({
         </svg>
         <p className="text-sm font-medium text-slate-600">{t('ui.placeholder', lang)}</p>
       </div>
-    </div>
+    </UniconCard>
   );
 }

@@ -1,23 +1,21 @@
 'use client';
 
 // UniconCard — content card shell (Design System: ui_kits/dashboard/Card.jsx)
-// Title centered, optional subtitle, optional region select, source footer.
-
-import { UniconRegionSelect } from './UniconRegionSelect';
+// Accepts optional headerActions slot (e.g. RegionSelector, scenario chips)
 
 interface UniconCardProps {
   title: string;
   subtitle?: string;
   source?: string;
-  region?: string;
-  onRegion?: (r: string) => void;
+  /** Rendered in the top-right of the header row (e.g. <RegionSelector />) */
+  headerActions?: React.ReactNode;
   children: React.ReactNode;
 }
 
-export function UniconCard({ title, subtitle, source, region, onRegion, children }: UniconCardProps) {
+export function UniconCard({ title, subtitle, source, headerActions, children }: UniconCardProps) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      {/* Header row: centered title + optional region select */}
+      {/* Header row: centered title/subtitle + optional right-side actions */}
       <div className="flex items-start gap-3">
         <div className="flex-1 text-center">
           <h2 className="text-xl font-semibold tracking-tight text-slate-800">{title}</h2>
@@ -25,8 +23,8 @@ export function UniconCard({ title, subtitle, source, region, onRegion, children
             <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
           )}
         </div>
-        {region && onRegion && (
-          <UniconRegionSelect value={region} onChange={onRegion} />
+        {headerActions && (
+          <div className="shrink-0">{headerActions}</div>
         )}
       </div>
 
