@@ -39,6 +39,9 @@ function ShellInner({ children }: Props) {
           </Suspense>
         </div>
         <nav className="flex flex-col gap-1 px-1.5 pt-1.5">
+          <div className="px-1.5 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+            부문
+          </div>
           {SECTORS.map((s) => {
             const active = s.slug === sectorSlug;
             const c = SECTOR_COLOR_CLASSES[s.color];

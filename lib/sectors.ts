@@ -49,10 +49,10 @@ export const SECTORS: SectorMeta[] = [
     color: 'blue',
     icon: '🚗',
     charts: [
-      { slug: 'stock-energy', title: '파워트레인별 차량 보급\n대수 및 총 에너지 수요' },
-      { slug: 'stock-share', title: '파워트레인별 차량\n등록대수 구성비' },
-      { slug: 'energy-mix', title: '차종별\n에너지원 믹스' },
-      { slug: 'ghg-trend', title: '온실가스\n배출 추이' },
+      { slug: 'stock-energy', title: '파워트레인별 차량 보급\n대수 및 총 에너지 수요', implemented: true },
+      { slug: 'stock-share', title: '파워트레인별 차량\n등록대수 구성비', implemented: true },
+      { slug: 'energy-mix', title: '차종별\n에너지원 믹스', implemented: true },
+      { slug: 'ghg-trend', title: '온실가스\n배출 추이', implemented: true },
     ],
   },
   {

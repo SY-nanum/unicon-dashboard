@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 40" width="260" height="40">
+  <rect width="260" height="40" fill="#312e81"></rect>
+  <text x="16" y="26" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="16" font-weight="600" fill="#ffffff">UNICON</text>
+  <text x="82" y="26" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="#818cf8">|</text>
+  <text x="96" y="26" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="#ffffff">통합평가모형 대시보드</text>
+</svg>

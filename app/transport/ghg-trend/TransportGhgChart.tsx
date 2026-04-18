@@ -37,24 +37,36 @@ export function TransportGhgChart({ rows, scenarios }: { rows: IamcRow[]; scenar
     },
     grid: { left: 70, right: 20, bottom: 60, top: 20 },
     xAxis: { type: 'category', data: years.map(String) },
-    yAxis: { type: 'value', name: '배출량 (ktCO₂)', nameLocation: 'middle', nameGap: 55 },
+    yAxis: { type: 'value', name: '배출량 (Mt CO₂eq)', nameLocation: 'middle', nameGap: 60 },
     series,
   };
 
   return (
     <div>
       <h2 className="text-xl font-semibold text-slate-800 text-center">온실가스 배출 추이</h2>
-      <div className="mt-3 flex justify-center gap-2">
-        {scenarios.map((s) => (
-          <button key={s}
-            onClick={() => setSelected((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])}
-            className={`rounded-full px-3 py-1 text-sm font-medium transition ${
-              selected.includes(s) ? 'text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-            style={selected.includes(s) ? { backgroundColor: SC_COLORS[s] ?? '#6366f1' } : {}}>
-            {s}
-          </button>
-        ))}
+      <div className="mt-3 flex justify-center items-center gap-2 flex-wrap">
+        <span className="text-sm font-medium text-slate-500">시나리오:</span>
+        {scenarios.map((s) => {
+          const on = selected.includes(s);
+          const color = SC_COLORS[s] ?? '#6366f1';
+          return (
+            <button key={s}
+              onClick={() => setSelected((prev) => on ? prev.filter((x) => x !== s) : [...prev, s])}
+              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-medium transition"
+              style={{
+                border: `2px solid ${on ? color : '#94a3b8'}`,
+                background: on ? color : '#fff',
+                color: on ? '#fff' : '#475569',
+              }}>
+              {on && (
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+              {s}
+            </button>
+          );
+        })}
       </div>
       <ReactECharts option={option} style={{ height: 420, width: '100%' }} notMerge={true} />
     </div>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 40" width="180" height="40">
+  <g transform="translate(4,10)">
+    <rect width="36" height="24" rx="2" fill="#fff" stroke="#e2e8f0"></rect>
+    <circle cx="18" cy="12" r="6" fill="#C60C30"></circle>
+    <path d="M18 6a6 6 0 0 1 0 12 3 3 0 0 1 0-6 3 3 0 0 0 0-6z" fill="#003478"></path>
+  </g>
+  <g transform="translate(48,10)">
+    <rect width="36" height="24" rx="2" fill="#fff" stroke="#e2e8f0"></rect>
+    <g><rect y="0" width="36" height="1.85" fill="#B22234"></rect><rect y="3.7" width="36" height="1.85" fill="#B22234"></rect><rect y="7.4" width="36" height="1.85" fill="#B22234"></rect><rect y="11.1" width="36" height="1.85" fill="#B22234"></rect><rect y="14.8" width="36" height="1.85" fill="#B22234"></rect><rect y="18.5" width="36" height="1.85" fill="#B22234"></rect><rect y="22.2" width="36" height="1.85" fill="#B22234"></rect></g>
+    <rect width="14" height="13" fill="#3C3B6E"></rect>
+  </g>
+  <g transform="translate(92,10)">
+    <rect width="36" height="24" rx="2" fill="#DE2910"></rect>
+    <polygon points="7,4 8,7 5,5 9,5 6,7" fill="#FFDE00"></polygon>
+  </g>
+  <g transform="translate(136,10)">
+    <rect width="36" height="24" rx="2" fill="#fff" stroke="#e2e8f0"></rect>
+    <circle cx="18" cy="12" r="6" fill="#BC002D"></circle>
+  </g>
+</svg>
