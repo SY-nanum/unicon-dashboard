@@ -23,11 +23,11 @@ export const SECTORS: SectorMeta[] = [
     color: 'purple',
     icon: '🌐',
     charts: [
-      { slug: 'cost-of-inaction', title: '기후 피해 비용\n비교' },
-      { slug: 'ghg-pathway', title: '글로벌 GHG\n감축 경로' },
-      { slug: 'carbon-trade', title: '탄소 가격 및\n무역 변화' },
-      { slug: 'temperature', title: '기온 상승\n경로' },
-      { slug: 'damage-heatmap', title: '부문별\n피해 상세' },
+      { slug: 'cost-of-inaction', title: '기후 피해 비용\n비교', implemented: true },
+      { slug: 'ghg-pathway', title: '글로벌 GHG\n감축 경로', implemented: true },
+      { slug: 'carbon-trade', title: '탄소 가격 및\n무역 변화', implemented: true },
+      { slug: 'temperature', title: '기온 상승\n경로', implemented: true },
+      { slug: 'damage-heatmap', title: '부문별\n피해 상세', implemented: true },
     ],
   },
   {
