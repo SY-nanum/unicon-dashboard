@@ -10,10 +10,13 @@
  * Values: electricity trade flow (GWh per timeslice representative period)
  * 96 timeslices = 4 seasons × 24 hours
  * Annual GWh ≈ sum(TS) × (8760 / 96)
+ *
+ * NOTE: reads xlsx directly (included in Vercel bundle via outputFileTracingIncludes).
+ * In-memory module cache handles warm lambda restarts.
  */
 
 import 'server-only';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import * as XLSX from 'xlsx';
 
@@ -42,32 +45,13 @@ export interface AnnualTrade {
 
 const SHEET_NAME = '연세_TRADE';
 const TS_SCALE = 8760 / 96; // hours per timeslice
-const cache = new Map<string, { sheet: TradeSheet; mtimeMs: number }>();
+const cache = new Map<string, TradeSheet>();
 
 export async function loadYonseiTradeSheet(relativePath: string): Promise<TradeSheet> {
-  const cacheKey = `${relativePath}::${SHEET_NAME}`;
-
-  const cacheFileName = cacheKey.replace(/[/\\:.]/g, '_') + '.json';
-  const jsonCachePath = path.resolve(process.cwd(), 'data-cache', cacheFileName);
-  try {
-    const jsonData = await readFile(jsonCachePath, 'utf-8');
-    const memCached = cache.get(cacheKey);
-    if (memCached) return memCached.sheet;
-    const wideRows = JSON.parse(jsonData) as unknown[][];
-    const sheet = parseTradeRows(wideRows);
-    cache.set(cacheKey, { sheet, mtimeMs: 0 });
-    return sheet;
-  } catch { /* fall through */ }
+  const cached = cache.get(relativePath);
+  if (cached) return cached;
 
   const absPath = path.resolve(process.cwd(), relativePath);
-  let mtimeMs = 0;
-  try { mtimeMs = (await stat(absPath)).mtimeMs; } catch { /* ignore */ }
-
-  const memCached = cache.get(cacheKey);
-  if (memCached && memCached.mtimeMs === mtimeMs && mtimeMs > 0) {
-    return memCached.sheet;
-  }
-
   const buffer = await readFile(absPath);
   const wb = XLSX.read(buffer, { type: 'buffer', cellDates: false });
   if (!wb.SheetNames.includes(SHEET_NAME)) {
@@ -78,7 +62,7 @@ export async function loadYonseiTradeSheet(relativePath: string): Promise<TradeS
   });
 
   const sheet = parseTradeRows(wideRows);
-  cache.set(cacheKey, { sheet, mtimeMs });
+  cache.set(relativePath, sheet);
   return sheet;
 }
 
@@ -128,7 +112,7 @@ function parseTradeRows(wideRows: unknown[][]): TradeSheet {
       const raw = row[colIdx];
       if (raw === null || raw === undefined) continue;
       const value = typeof raw === 'number' ? raw : Number(raw);
-      if (!Number.isFinite(value) || value < 0.01) continue; // skip ~0 model noise
+      if (!Number.isFinite(value) || value < 0.01) continue;
       rows.push({ year, from, to, tsIndex, value });
     }
   }

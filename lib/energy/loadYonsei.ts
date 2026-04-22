@@ -1,7 +1,7 @@
 /**
- * Custom loader for the '연세' sheet in KEI_Power_Yonsei.xlsx.
+ * Loader for the '연세_hourly' sheet in KEI_Power_Yonsei_V2.xlsx.
  *
- * Sheet format (non-IAMC):
+ * Sheet format:
  *   Row 0-3 : empty
  *   Row 4   : headers — [Model, region, timeslice, item, 2020, 2023, ..., 2050]
  *   Row 5+  : data rows
@@ -14,6 +14,9 @@
  *
  * Items: 'netload' (GW), 'Solar' (GW)
  * Demand (GW) = netload + Solar
+ *
+ * NOTE: reads xlsx directly (included in Vercel bundle via outputFileTracingIncludes).
+ * In-memory module cache handles warm lambda restarts.
  */
 
 import 'server-only';
@@ -41,42 +44,14 @@ export interface YonseiSheet {
 }
 
 const SHEET_NAME = '연세_hourly';
+const cache = new Map<string, YonseiSheet>();
 
-const cache = new Map<string, { sheet: YonseiSheet; mtimeMs: number }>();
-
-/** Load the '연세' sheet. Falls back to data-cache JSON on Vercel. */
+/** Load the '연세_hourly' sheet. */
 export async function loadYonseiSheet(relativePath: string): Promise<YonseiSheet> {
-  const cacheKey = `${relativePath}::${SHEET_NAME}`;
+  const cached = cache.get(relativePath);
+  if (cached) return cached;
 
-  // ─── Try pre-built JSON cache (Vercel production) ────────────────────────
-  const cacheFileName =
-    cacheKey.replace(/[/\\:.]/g, '_') + '.json';
-  const jsonCachePath = path.resolve(process.cwd(), 'data-cache', cacheFileName);
-  try {
-    const jsonData = await readFile(jsonCachePath, 'utf-8');
-    const memCached = cache.get(cacheKey);
-    if (memCached) return memCached.sheet;
-    const wideRows = JSON.parse(jsonData) as unknown[][];
-    const sheet = parseYonseiRows(wideRows);
-    cache.set(cacheKey, { sheet, mtimeMs: 0 });
-    return sheet;
-  } catch {
-    // JSON cache not found — fall through to xlsx
-  }
-
-  // ─── Direct xlsx read (local dev) ────────────────────────────────────────
   const absPath = path.resolve(process.cwd(), relativePath);
-  let mtimeMs = 0;
-  try {
-    const s = await import('node:fs/promises').then((m) => m.stat(absPath));
-    mtimeMs = s.mtimeMs;
-  } catch { /* ignore */ }
-
-  const memCached = cache.get(cacheKey);
-  if (memCached && memCached.mtimeMs === mtimeMs && mtimeMs > 0) {
-    return memCached.sheet;
-  }
-
   const buffer = await readFile(absPath);
   const wb = XLSX.read(buffer, { type: 'buffer', cellDates: false });
 
@@ -94,7 +69,7 @@ export async function loadYonseiSheet(relativePath: string): Promise<YonseiSheet
   });
 
   const sheet = parseYonseiRows(wideRows);
-  cache.set(cacheKey, { sheet, mtimeMs });
+  cache.set(relativePath, sheet);
   return sheet;
 }
 
