@@ -87,7 +87,7 @@ function parseTradeRows(wideRows: unknown[][]): TradeSheet {
   let yearRowIdx = -1;
   for (let i = 0; i < wideRows.length; i++) {
     const row = wideRows[i];
-    const yearCells = row?.slice(3).filter((c) => typeof c === 'number' && c >= 2020 && c <= 2100);
+    const yearCells = row?.slice(1).filter((c) => typeof c === 'number' && c >= 2020 && c <= 2100);
     if (yearCells && yearCells.length >= 3) {
       yearRowIdx = i;
       break;
@@ -99,10 +99,10 @@ function parseTradeRows(wideRows: unknown[][]): TradeSheet {
   const fromRow  = wideRows[yearRowIdx + 1] as unknown[];
   const toRow    = wideRows[yearRowIdx + 2] as unknown[];
 
-  // Build column descriptors
+  // Build column descriptors — data columns start at index 1
   interface ColDef { colIdx: number; year: number; from: string; to: string }
   const cols: ColDef[] = [];
-  for (let c = 3; c < yearRow.length; c++) {
+  for (let c = 1; c < yearRow.length; c++) {
     const y = yearRow[c];
     const from = fromRow?.[c];
     const to   = toRow?.[c];
@@ -112,12 +112,13 @@ function parseTradeRows(wideRows: unknown[][]): TradeSheet {
   }
 
   // Parse TS data rows (start after 3 header rows)
+  // TS label is at column 0 (e.g. "TS1")
   const dataStart = yearRowIdx + 3;
   const rows: TradeRow[] = [];
   for (let r = dataStart; r < wideRows.length; r++) {
     const row = wideRows[r];
     if (!row) continue;
-    const tsCell = row[2];
+    const tsCell = row[0];
     if (typeof tsCell !== 'string') continue;
     const match = tsCell.match(/TS(\d+)/i);
     if (!match) continue;
