@@ -1,101 +1,96 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { IamcRow } from '@/lib/iamc/types';
+import { useState } from 'react';
+import type { YonseiAnnualRow } from '@/lib/energy/loadYonseiAnnual';
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
 
-interface Props { rows: IamcRow[] }
+interface Props {
+  genmixRows: YonseiAnnualRow[];
+  capmixRows: YonseiAnnualRow[];
+  years: number[];
+}
 
-const VAR_LABEL: Record<string, string> = {
-  'Secondary Energy|Electricity|Coal':  '석탄',
-  'Secondary Energy|Electricity|Solar': '태양광',
-  'Secondary Energy|Electricity|Total': '총 발전량',
-};
-
-const VAR_COLOR: Record<string, string> = {
-  'Secondary Energy|Electricity|Coal':  '#475569',
-  'Secondary Energy|Electricity|Solar': '#f59e0b',
-  'Secondary Energy|Electricity|Total': '#2563eb',
-};
-
-// Mix variables shown as stacked bars; Total shown as line
-const STACK_VARS = [
-  'Secondary Energy|Electricity|Coal',
-  'Secondary Energy|Electricity|Solar',
+// Tech display groups (order = stack order, bottom to top)
+const TECH_GROUPS: { label: string; techs: string[]; color: string }[] = [
+  { label: '석탄',         techs: ['coal'],                       color: '#475569' },
+  { label: '가스(CCGT)',   techs: ['CCGT'],                       color: '#f97316' },
+  { label: '가스(CCS)',    techs: ['CCGT-CCS'],                   color: '#fb923c' },
+  { label: '원자력',       techs: ['Nuclear'],                    color: '#7c3aed' },
+  { label: '수력',         techs: ['Hydro'],                      color: '#3b82f6' },
+  { label: '바이오매스',   techs: ['Biomass'],                    color: '#22c55e' },
+  { label: '태양광',       techs: ['Solar'],                      color: '#eab308' },
+  { label: '풍력(육상)',   techs: ['WindOn'],                     color: '#06b6d4' },
+  { label: '풍력(해상)',   techs: ['WindOff'],                    color: '#0284c7' },
+  { label: 'ESS/양수',     techs: ['ESS', 'PUMP'],                color: '#a78bfa' },
+  { label: '기타',         techs: ['OCGT', 'oil', 'waste', 'HUCM'], color: '#cbd5e1' },
 ];
 
-export function EnergyPowerMixChart({ rows }: Props) {
-  if (!rows.length) {
-    return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2 text-slate-400">
-        <span className="text-4xl">⚡</span>
-        <p className="text-sm">전원 믹스 전망 데이터 제출 대기 중</p>
-        <p className="text-xs">(NetZero 시나리오 발전량은 KEI팀 제출 후 업데이트)</p>
-      </div>
-    );
-  }
-
-  // Merge Historical + NetZero years
-  const years = [...new Set(rows.map((r) => r.year))].sort((a, b) => a - b);
-  const scenarios = [...new Set(rows.map((r) => r.scenario))];
-
-  const series: object[] = [];
-
-  // Historical stacked bars
-  for (const v of STACK_VARS) {
-    const histRows = rows.filter((r) => r.variable === v && r.scenario === 'Historical');
-    if (!histRows.length) continue;
-    series.push({
-      name: VAR_LABEL[v] ?? v,
-      type: 'bar',
-      stack: 'hist',
-      data: years.map((y) => histRows.find((r) => r.year === y)?.value ?? null),
-      itemStyle: { color: VAR_COLOR[v] ?? '#6366f1' },
-      barWidth: '35%',
+function aggregateByGroup(rows: YonseiAnnualRow[], years: number[]) {
+  return TECH_GROUPS.map((g) => {
+    const data = years.map((y) => {
+      const total = rows
+        .filter((r) => g.techs.includes(r.tech) && r.year === y)
+        .reduce((s, r) => s + r.value, 0);
+      return total > 0.05 ? Math.round(total * 10) / 10 : null;
     });
-  }
+    if (data.every((d) => d === null)) return null;
+    return { label: g.label, color: g.color, data };
+  }).filter(Boolean) as { label: string; color: string; data: (number | null)[] }[];
+}
 
-  // NetZero stacked bars (if data exists)
-  const hasNetZero = rows.some((r) => r.scenario === 'NetZero');
-  if (hasNetZero) {
-    for (const v of STACK_VARS) {
-      const nzRows = rows.filter((r) => r.variable === v && r.scenario === 'NetZero');
-      if (!nzRows.length) continue;
-      series.push({
-        name: `${VAR_LABEL[v] ?? v} (NetZero)`,
-        type: 'bar',
-        stack: 'nz',
-        data: years.map((y) => nzRows.find((r) => r.year === y)?.value ?? null),
-        itemStyle: { color: VAR_COLOR[v] ?? '#6366f1', opacity: 0.75 },
-        barWidth: '35%',
-      });
-    }
-  }
+export function EnergyPowerMixChart({ genmixRows, capmixRows, years }: Props) {
+  const [mode, setMode] = useState<'genmix' | 'capmix'>('genmix');
+  const rows = mode === 'genmix' ? genmixRows : capmixRows;
+  const unit = mode === 'genmix' ? 'TWh' : 'GW';
 
-  // Total demand line (Historical)
-  const totalVar = 'Secondary Energy|Electricity|Total';
-  const totalHist = rows.filter((r) => r.variable === totalVar && r.scenario === 'Historical');
-  if (totalHist.length) {
-    series.push({
-      name: '총 발전량 (Historical)',
-      type: 'line',
-      data: years.map((y) => totalHist.find((r) => r.year === y)?.value ?? null),
-      lineStyle: { color: VAR_COLOR[totalVar], width: 2.5 },
-      itemStyle: { color: VAR_COLOR[totalVar] },
-      symbol: 'circle',
-      symbolSize: 6,
-      connectNulls: false,
-    });
-  }
+  const groups = aggregateByGroup(rows, years);
 
-  const histYears = years.filter((y) => y <= 2022);
-  const projYears = years.filter((y) => y >= 2025);
+  // Total aggregate line
+  const totalLine = years.map((y) =>
+    Math.round(rows.reduce((s, r) => (r.year === y ? s + r.value : s), 0) * 10) / 10,
+  );
+
+  const series: object[] = groups.map((g) => ({
+    name: g.label,
+    type: 'bar',
+    stack: 'mix',
+    data: g.data,
+    itemStyle: { color: g.color },
+    barMaxWidth: 40,
+  }));
+
+  series.push({
+    name: `합계 (${unit})`,
+    type: 'line',
+    data: totalLine,
+    lineStyle: { color: '#1e293b', width: 2.5 },
+    itemStyle: { color: '#1e293b' },
+    symbol: 'circle',
+    symbolSize: 5,
+    z: 10,
+  });
 
   const option = {
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    legend: { bottom: 0 },
-    grid: { left: 65, right: 20, bottom: 60, top: 20 },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: { seriesName: string; value: number | null; axisValue: string }[]) => {
+        if (!params.length) return '';
+        const year = params[0].axisValue;
+        const stackItems = params.filter(
+          (p) => p.seriesName !== `합계 (${unit})` && p.value != null && (p.value as number) > 0.05,
+        );
+        const total = stackItems.reduce((s, p) => s + (p.value as number), 0);
+        const lines = stackItems.map(
+          (p) => `${p.seriesName}: <b>${(p.value as number).toFixed(1)} ${unit}</b>`,
+        );
+        return `<div class="text-xs"><b>${year}년</b><br/>${lines.join('<br/>')}<hr style="margin:4px 0"/>합계: <b>${total.toFixed(1)} ${unit}</b></div>`;
+      },
+    },
+    legend: { bottom: 0, type: 'scroll', textStyle: { fontSize: 10 } },
+    grid: { left: 70, right: 20, bottom: 65, top: 20 },
     xAxis: {
       type: 'category',
       data: years.map(String),
@@ -103,38 +98,38 @@ export function EnergyPowerMixChart({ rows }: Props) {
     },
     yAxis: {
       type: 'value',
-      name: 'TWh',
+      name: unit,
       nameLocation: 'middle',
-      nameGap: 50,
+      nameGap: 55,
     },
-    // Shade projection zone
-    visualMap: undefined as unknown,
-    markArea: undefined as unknown,
     series,
   };
 
-  const hasData = rows.some((r) => r.value != null);
-
   return (
-    <div>
-      {hasData ? (
-        <>
-          {projYears.length === 0 && (
-            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
-              ⚠️ 현재 2020~2022년 실적 데이터만 있습니다. NetZero 전망치는 KEI팀 제출 후 자동 반영됩니다.
-            </div>
-          )}
-          <p className="mb-2 text-center text-xs text-slate-400">
-            막대: 전원별 발전량 구성 &nbsp;|&nbsp; 선: 총 발전량 추이
-          </p>
-          <ReactECharts option={option} style={{ height: 380 }} notMerge />
-        </>
-      ) : (
-        <div className="flex h-64 flex-col items-center justify-center gap-2 text-slate-400">
-          <span className="text-4xl">⚡</span>
-          <p className="text-sm">전원 믹스 전망 데이터 제출 대기 중</p>
-        </div>
-      )}
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        {(['genmix', 'capmix'] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            className={`rounded-full px-4 py-1 text-xs font-medium transition-colors ${
+              mode === m
+                ? 'bg-amber-500 text-white'
+                : 'border border-amber-400 text-slate-600 hover:bg-amber-50'
+            }`}
+          >
+            {m === 'genmix' ? '발전량 (TWh)' : '설비용량 (GW)'}
+          </button>
+        ))}
+      </div>
+
+      <ReactECharts option={option} style={{ height: 420 }} notMerge />
+
+      <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+        <b>UNICON POWER&CGE 모형 (NetZero 시나리오):</b> 석탄 발전 급감 → 태양광·풍력 확대.
+        2035년 이후 CCGT-CCS 도입, ESS 설비 2032년부터 급속 성장.
+        해상풍력(WindOff)은 2050년에 본격화. 3년 단위 시뮬레이션 (2020–2050).
+      </div>
     </div>
   );
 }

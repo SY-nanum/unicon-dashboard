@@ -40,7 +40,7 @@ export interface YonseiSheet {
   seasons: number[]; // [1,2,3,4]
 }
 
-const SHEET_NAME = '연세';
+const SHEET_NAME = '연세_hourly';
 
 const cache = new Map<string, { sheet: YonseiSheet; mtimeMs: number }>();
 
