@@ -1,19 +1,14 @@
-import { loadForestData } from '@/lib/forest/load';
 import { UniconCard } from '@/components/ui/UniconCard';
 import { ForestSiteIndexChart } from './ForestSiteIndexChart';
 
-export default async function SiteIndexMapPage() {
-  const rows = await loadForestData();
-  const stockRows = rows.filter((r) => r.variable === 'Carbon Stock|Forest|Total');
-  const areaRows  = rows.filter((r) => r.variable.startsWith('Area|Forest|Age Class|'));
-
+export default function SiteIndexMapPage() {
   return (
     <UniconCard
-      title="산림 탄소밀도"
-      subtitle="권역별 단위면적당 탄소저장량 (t C/ha)"
-      source="data/forest/02_IAMC_Reports/Final_Comparison_All_Scenarios.csv · GeoTIFF_Outputs/"
+      title="지위지수 지도"
+      subtitle="국가별 산림 지위지수 (Siteindex_m) — GeoTIFF Historical Band 17"
+      source="data/forest/GeoTIFF_Historical/{COUNTRY}_17Band_Historical.tif · Band 17 · public/maps/meta.json"
     >
-      <ForestSiteIndexChart stockRows={stockRows} areaRows={areaRows} />
+      <ForestSiteIndexChart />
     </UniconCard>
   );
 }
