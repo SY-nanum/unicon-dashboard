@@ -36,7 +36,7 @@ export function ForestCarbonStockChart({ rows }: Props) {
   const availableRegions = REGION_ORDER.filter((r) => rows.some((row) => row.region === r));
   const [selectedRegions, setSelectedRegions] = useState<string[]>(DEFAULT_REGIONS);
   const [mode, setMode] = useState<ScenarioMode>('compare');
-  const [showHistorical, setShowHistorical] = useState(false);
+  const [showHistorical, setShowHistorical] = useState(true);
 
   const toggleRegion = (r: string) =>
     setSelectedRegions((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]);
@@ -125,10 +125,10 @@ export function ForestCarbonStockChart({ rows }: Props) {
             ))}
           </div>
           {showHistorical && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500">
               <span className="w-16 flex-shrink-0 font-bold">실적</span>
-              <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#64748b" strokeWidth="2"/><circle cx="11" cy="4" r="2.5" fill="#64748b"/></svg>
-              실측값
+              <svg width="22" height="8" className="flex-shrink-0"><line x1="0" y1="4" x2="22" y2="4" stroke="#64748b" strokeWidth="2"/><circle cx="11" cy="4" r="2.5" fill="#64748b"/></svg>
+              <span>실측값 — 권역 구분 없이 회색 단일 계열로 표시 (데이터가 있는 권역만)</span>
             </div>
           )}
         </div>
@@ -142,7 +142,7 @@ export function ForestCarbonStockChart({ rows }: Props) {
         {showHistorical && (
           <span className="flex items-center gap-1.5 text-xs text-slate-500">
             <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#64748b" strokeWidth="2"/><circle cx="11" cy="4" r="2.5" fill="#64748b"/></svg>
-            실적
+            실적 (회색 단일 계열)
           </span>
         )}
         {selectedRegions.map((r) => (
@@ -198,9 +198,14 @@ export function ForestCarbonStockChart({ rows }: Props) {
       {/* Custom 2-row legend */}
       <CustomLegend />
 
-      <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
-        <b>산림 탄소저장량 (Carbon Stock):</b> 산림 생태계가 흡수·저장한 탄소의 총량 (단위: Mt C).
-        NetZero 시나리오에서 BAU 대비 추가 탄소저장 효과를 확인할 수 있습니다.
+      <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800 space-y-1">
+        <p><b>산림 탄소저장량 (Carbon Stock):</b> 산림 생태계가 흡수·저장한 탄소의 총량 (단위: Mt C).
+        NetZero 시나리오에서 BAU 대비 추가 탄소저장 효과를 확인할 수 있습니다.</p>
+        <p className="text-slate-500">
+          <b>회색 실선 (실적):</b> IAMC 실측 데이터가 존재하는 권역의 과거 실적값입니다.
+          시나리오 색상 구분 없이 <span className="font-semibold text-slate-600">회색 단일 계열</span>로 표시되며,
+          선택된 권역 중 실측 데이터가 있는 경우에만 나타납니다.
+        </p>
       </div>
     </div>
   );

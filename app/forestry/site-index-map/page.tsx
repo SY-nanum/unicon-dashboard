@@ -9,8 +9,8 @@ export default async function SiteIndexMapPage() {
 
   return (
     <UniconCard
-      title="지위지수지도"
-      subtitle="권역별 산림 탄소밀도 (t C/ha) — 지위지수 대리지표"
+      title="산림 탄소밀도"
+      subtitle="권역별 단위면적당 탄소저장량 (t C/ha)"
       source="data/forest/02_IAMC_Reports/Final_Comparison_All_Scenarios.csv · GeoTIFF_Outputs/"
     >
       <ForestSiteIndexChart stockRows={stockRows} areaRows={areaRows} />

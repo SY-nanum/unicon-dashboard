@@ -56,16 +56,18 @@ function GisWorldMap({
   unit: string;
   title: string;
 }) {
-  const divRef = useRef<HTMLDivElement>(null);
+  const divRef   = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<unknown>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   const depKey = compare
     ? JSON.stringify([...(bauData ?? []), ...(nzData ?? [])].map((d) => [d.region, d.value]))
     : JSON.stringify((data ?? []).map((d) => [d.region, d.value]));
 
+  // Effect 1: load world map once, create chart instance
   useEffect(() => {
     let disposed = false;
-    async function init() {
+    async function loadMap() {
       try {
         const echarts = await import('echarts');
         const res = await fetch('/geo/world.json');
@@ -73,69 +75,78 @@ function GisWorldMap({
         const worldJson = await res.json();
         echarts.registerMap('world', worldJson as Parameters<typeof echarts.registerMap>[1]);
         if (disposed || !divRef.current) return;
-
-        const chart = echarts.init(divRef.current);
-        const allPts = compare ? [...(bauData ?? []), ...(nzData ?? [])] : (data ?? []);
-        // Use fixedMax for consistent sizing across year changes
-        const maxVal = fixedMax ?? Math.max(...allPts.map((d) => d.value), 1);
-        const bauMap = Object.fromEntries((bauData ?? []).map((d) => [d.region, d.value]));
-        const nzMap  = Object.fromEntries((nzData  ?? []).map((d) => [d.region, d.value]));
-
-        const mkSeries = (
-          pts: GisPoint[], color: string, opacity: number, name: string, showLabel: boolean,
-        ) => ({
-          name, type: 'scatter', coordinateSystem: 'geo',
-          data: pts.filter((d) => d.value > 0).map((d): SI => ({
-            name: d.region, label: d.label,
-            value: [d.lng, d.lat, d.value],
-            bauVal: bauMap[d.region], nzVal: nzMap[d.region],
-          })),
-          symbolSize: (val: number[]) => Math.max(6, Math.sqrt(val[2] / maxVal) * 60),
-          itemStyle: { color, opacity, borderColor: '#1e293b', borderWidth: 1 },
-          label: showLabel
-            ? { show: true, formatter: (p: { data?: SI }) => p.data?.label ?? '', position: 'top', fontSize: 9, color: '#1e293b' }
-            : { show: false },
-          emphasis: { scale: true },
-        });
-
-        const series = compare
-          ? [
-              mkSeries(bauData ?? [], '#dc2626', 0.55, 'BAU', false),
-              mkSeries(nzData  ?? [], '#059669', 0.82, 'NetZero', true),
-            ]
-          : [mkSeries(data ?? [], singleColor, 0.80, 'Value', true)];
-
-        chart.setOption({
-          backgroundColor: '#f0fdf4',
-          title: { text: title, left: 'center', top: 8, textStyle: { fontSize: 12, color: '#374151' } },
-          tooltip: {
-            trigger: 'item',
-            formatter: (p: { data?: SI }) => {
-              if (!p.data) return '';
-              if (compare) {
-                return `<b>${p.data.label}</b><br/>`
-                  + `BAU: <b>${(p.data.bauVal ?? 0).toFixed(1)} ${unit}</b><br/>`
-                  + `NetZero: <b>${(p.data.nzVal ?? 0).toFixed(1)} ${unit}</b>`;
-              }
-              return `<b>${p.data.label}</b><br/>${p.data.value[2].toFixed(1)} ${unit}`;
-            },
-          },
-          legend: compare ? { bottom: 8, data: ['BAU', 'NetZero'], textStyle: { fontSize: 11 } } : { show: false },
-          geo: {
-            map: 'world', roam: true, top: 40,
-            itemStyle: { areaColor: '#dcfce7', borderColor: '#86efac', borderWidth: 0.5 },
-            emphasis: { itemStyle: { areaColor: '#bbf7d0' }, label: { show: false } },
-          },
-          series,
-        });
-
+        chartRef.current = echarts.init(divRef.current);
         if (!disposed) setStatus('ready');
       } catch { if (!disposed) setStatus('error'); }
     }
-    init();
-    return () => { disposed = true; };
+    loadMap();
+    return () => {
+      disposed = true;
+      (chartRef.current as import('echarts').ECharts | null)?.dispose();
+      chartRef.current = null;
+    };
+  }, []); // runs ONCE
+
+  // Effect 2: update chart options whenever data / color / mode changes
+  useEffect(() => {
+    if (!chartRef.current || status !== 'ready') return;
+    const chart = chartRef.current as import('echarts').ECharts;
+
+    const allPts = compare ? [...(bauData ?? []), ...(nzData ?? [])] : (data ?? []);
+    const maxVal = fixedMax ?? Math.max(...allPts.map((d) => d.value), 1);
+    const bauMap = Object.fromEntries((bauData ?? []).map((d) => [d.region, d.value]));
+    const nzMap  = Object.fromEntries((nzData  ?? []).map((d) => [d.region, d.value]));
+
+    const mkSeries = (
+      pts: GisPoint[], color: string, opacity: number, name: string, showLabel: boolean,
+    ) => ({
+      name, type: 'scatter', coordinateSystem: 'geo',
+      data: pts.filter((d) => d.value > 0).map((d): SI => ({
+        name: d.region, label: d.label,
+        value: [d.lng, d.lat, d.value],
+        bauVal: bauMap[d.region], nzVal: nzMap[d.region],
+      })),
+      // Linear scale — year-to-year differences (5-35%) stay visually perceptible
+      symbolSize: (val: number[]) => Math.max(8, 12 + (val[2] / maxVal) * 48),
+      itemStyle: { color, opacity, borderColor: '#1e293b', borderWidth: 1 },
+      label: showLabel
+        ? { show: true, formatter: (p: { data?: SI }) => p.data?.label ?? '', position: 'top', fontSize: 9, color: '#1e293b' }
+        : { show: false },
+      emphasis: { scale: true },
+    });
+
+    const series = compare
+      ? [
+          mkSeries(bauData ?? [], '#dc2626', 0.55, 'BAU', false),
+          mkSeries(nzData  ?? [], '#059669', 0.82, 'NetZero', true),
+        ]
+      : [mkSeries(data ?? [], singleColor, 0.80, 'Value', true)];
+
+    chart.setOption({
+      backgroundColor: '#f0fdf4',
+      title: { text: title, left: 'center', top: 8, textStyle: { fontSize: 12, color: '#374151' } },
+      tooltip: {
+        trigger: 'item',
+        formatter: (p: { data?: SI }) => {
+          if (!p.data) return '';
+          if (compare) {
+            return `<b>${p.data.label}</b><br/>`
+              + `BAU: <b>${(p.data.bauVal ?? 0).toFixed(1)} ${unit}</b><br/>`
+              + `NetZero: <b>${(p.data.nzVal ?? 0).toFixed(1)} ${unit}</b>`;
+          }
+          return `<b>${p.data.label}</b><br/>${p.data.value[2].toFixed(1)} ${unit}`;
+        },
+      },
+      legend: compare ? { bottom: 8, data: ['BAU', 'NetZero'], textStyle: { fontSize: 11 } } : { show: false },
+      geo: {
+        map: 'world', roam: true, top: 40,
+        itemStyle: { areaColor: '#dcfce7', borderColor: '#86efac', borderWidth: 0.5 },
+        emphasis: { itemStyle: { areaColor: '#bbf7d0' }, label: { show: false } },
+      },
+      series,
+    }, true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [depKey, compare, singleColor, fixedMax, unit]);
+  }, [status, depKey, compare, singleColor, fixedMax, unit, title]);
 
   if (status === 'error') {
     return (

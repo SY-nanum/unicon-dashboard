@@ -91,7 +91,7 @@ export const SECTORS: SectorMeta[] = [
       { slug: 'carbon-stock', title: '국가별탄소\n저장량추이', implemented: true },
       { slug: 'age-class', title: '영급구조\n변화', implemented: true },
       { slug: 'age-map', title: '임령\n지도', implemented: true },
-      { slug: 'site-index-map', title: '지위지수\n지도', implemented: true },
+      { slug: 'site-index-map', title: '산림\n탄소밀도', implemented: true },
       { slug: 'annual-flux', title: '연간\n순흡수량', implemented: true },
     ],
   },

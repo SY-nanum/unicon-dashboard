@@ -76,7 +76,7 @@ const dict: Record<string, Record<Lang, string>> = {
   'chart.carbon-stock': { ko: '국가별탄소\n저장량추이', en: 'Carbon Stock\nTrend by Country', zh: '碳储量\n趋势', ja: '炭素貯蔵量\n推移' },
   'chart.age-class': { ko: '영급구조\n변화', en: 'Age Class\nStructure Change', zh: '龄级结构\n变化', ja: '齢級構造\n変化' },
   'chart.age-map': { ko: '임령\n지도', en: 'Forest Age\nMap', zh: '林龄\n地图', ja: '林齢\nマップ' },
-  'chart.site-index-map': { ko: '지위지수\n지도', en: 'Site Index\nMap', zh: '立地指数\n地图', ja: '地位指数\nマップ' },
+  'chart.site-index-map': { ko: '산림\n탄소밀도', en: 'Forest Carbon\nDensity', zh: '森林碳\n密度', ja: '森林炭素\n密度' },
   'chart.annual-flux': { ko: '연간\n순흡수량', en: 'Annual Net\nAbsorption', zh: '年净\n吸收量', ja: '年間\n純吸収量' },
 
   // UI labels
@@ -149,7 +149,7 @@ const dict: Record<string, Record<Lang, string>> = {
   'page.forestry.biomass-map.sub': { ko: '산림 부문 · {region} · 1km 격자 바이오매스 밀도 (t/ha)', en: 'Forestry · {region} · 1km grid biomass density (t/ha)', zh: '林业 · {region} · 1km格网生物量密度 (t/ha)', ja: '林業 · {region} · 1kmメッシュバイオマス密度 (t/ha)' },
   'page.forestry.age-map': { ko: '임령 지도', en: 'Forest Age Map', zh: '林龄地图', ja: '林齢マップ' },
   'page.forestry.age-map.sub': { ko: '산림 부문 · {region} · 1km 격자 산림 임령 (yr)', en: 'Forestry · {region} · 1km grid forest age (yr)', zh: '林业 · {region} · 1km格网林龄 (yr)', ja: '林業 · {region} · 1kmメッシュ林齢 (yr)' },
-  'page.forestry.site-index': { ko: '지위지수 지도', en: 'Site Index Map', zh: '立地指数地图', ja: '地位指数マップ' },
+  'page.forestry.site-index': { ko: '산림 탄소밀도', en: 'Forest Carbon Density', zh: '森林碳密度', ja: '森林炭素密度' },
   'page.forestry.site-index.sub': { ko: '산림 부문 · {region} · Site Index (임목 생장 잠재력, m)', en: 'Forestry · {region} · Site Index (growth potential, m)', zh: '林业 · {region} · 立地指数 (生长潜力, m)', ja: '林業 · {region} · 地位指数 (成長ポテンシャル, m)' },
   'page.forestry.site-index.desc': { ko: '지위지수(Site Index)는 산림의 생장 잠재력을 나타내는 지표로, 우세목의 예상 수고(단위: m)로 측정됩니다. 토양, 지형, 기후 등 입지 조건에 의해 결정되며, 값이 높을수록 생산성이 우수한 산림입니다.', en: 'Site Index indicates the growth potential of a forest, measured by the expected height (m) of dominant trees. It is determined by site conditions such as soil, terrain, and climate — higher values indicate more productive forests.', zh: '立地指数表示森林的生长潜力，以优势木的预期树高(m)衡量。由土壤、地形、气候等条件决定，值越高表示森林生产力越强。', ja: '地位指数は森林の成長ポテンシャルを示す指標で、優勢木の予想樹高(m)で測定されます。土壌、地形、気候等の立地条件により決定され、値が高いほど生産性の高い森林です。' },
   'page.forestry.site-index.note': { ko: '※ 2050 예측값과 현재값이 완전히 동일합니다. 지위지수는 토양·지형에 의해 결정되는 정적(Static) 속성으로, BAU/NetZero 시나리오에 따라 변화하지 않습니다.', en: '※ 2050 forecast equals current values. Site Index is a static property determined by soil/terrain and does not change with BAU/NetZero scenarios.', zh: '※ 2050预测值与现值完全相同。立地指数是由土壤/地形决定的静态属性，不随BAU/NetZero情景变化。', ja: '※ 2050年予測値と現在値は完全に同一です。地位指数は土壌・地形により決定される静的属性で、BAU/NetZeroシナリオでは変化しません。' },
