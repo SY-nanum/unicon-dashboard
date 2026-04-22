@@ -30,6 +30,8 @@ next-env.d.ts
 
 # generated data cache (rebuilt at deploy time)
 data-cache/
+# but include pre-built energy xlsx JSON (xlsx not parseable on Vercel at runtime)
+!data-cache/data_energy_*.json
 
 # large data files
 data/forest/GeoTIFF_Historical/
