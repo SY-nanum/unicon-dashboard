@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingIncludes: {
-    '/**': ['./data/**/*'],
+    '/**': ['./data/**/*', './data-cache/**/*'],
   },
 };
 
