@@ -35,10 +35,10 @@ export function ForestBiomassChart({ rows }: Props) {
 
   const isHistorical = selectedYear <= 2020;
 
-  /* ── SUB-TAB BAR ─────────────────────────────────────────── */
+  /* ── TAB BAR ─────────────────────────────────────────────── */
   const tabBar = (
     <div className="flex gap-1 border-b border-slate-200">
-      {([['chart','📊 통계 차트'],['gis','🗺️ GIS 지도']] as [SubTab,string][]).map(([key, label]) => (
+      {([['chart', '📊 통계 차트'], ['gis', '🗺️ GIS 지도']] as [SubTab, string][]).map(([key, label]) => (
         <button key={key} onClick={() => setSubTab(key)}
           className={`px-4 py-2 text-sm font-medium transition-colors ${
             subTab === key
@@ -51,35 +51,7 @@ export function ForestBiomassChart({ rows }: Props) {
     </div>
   );
 
-  /* ── GIS TAB ─────────────────────────────────────────────── */
-  if (subTab === 'gis') {
-    return (
-      <div className="space-y-4">
-        {tabBar}
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
-          ⚠️ 공간 바이오매스 지도 데이터(GeoTIFF)는 국가별 래스터 파일로 제공되며,
-          현재 GIS 렌더링 파이프라인(geotiff.js + MapLibre GL) 구축 전입니다.
-        </div>
-        <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-green-200 bg-green-50">
-          <span className="text-5xl">🗺️</span>
-          <p className="text-base font-medium text-green-700">바이오매스 분포 지도 (GeoTIFF)</p>
-          <p className="max-w-sm text-center text-xs text-slate-500">
-            국가별 래스터 지도는{' '}
-            <code className="rounded bg-green-100 px-1">GeoTIFF_Outputs/</code> 디렉토리의 TIF 파일로 제공됩니다.
-          </p>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
-          <p className="mb-2 font-semibold text-slate-700">📁 데이터 파일</p>
-          <p className="font-mono">{'{ISO3}'}_2050_Dashboard.tif &nbsp;— 국가별 2050년 전망 (150+ 국가)</p>
-          <p className="font-mono">{'{ISO3}'}_17Band_Historical.tif — 17개 밴드 실측 데이터</p>
-          <p className="mt-3 text-slate-500">GIS 파이프라인 구축 후 인터랙티브 지도로 시각화 예정입니다.</p>
-        </div>
-      </div>
-    );
-  }
-
-  /* ── CHART TAB ───────────────────────────────────────────── */
-  // Controls
+  /* ── CONTROLS ─────────────────────────────────────────────── */
   const controls = (
     <div className="flex flex-wrap items-center gap-4">
       <div>
@@ -114,7 +86,9 @@ export function ForestBiomassChart({ rows }: Props) {
     </div>
   );
 
-  // Compare mode chart
+  /* ── CHART CONTENT ───────────────────────────────────────── */
+  let chartContent: React.ReactNode;
+
   if (!isHistorical && mode === 'compare') {
     const bauData = getRegionData(rows, selectedYear, 'BAU');
     const nzData  = getRegionData(rows, selectedYear, 'NetZero');
@@ -123,14 +97,8 @@ export function ForestBiomassChart({ rows }: Props) {
 
     const option = {
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      legend: {
-        bottom: 0,
-        type: 'plain',
-        data: ['BAU', 'NetZero'],
-        textStyle: { fontSize: 11 },
-        itemWidth: 20,
-      },
-      grid: { left: 130, right: 80, top: 10, bottom: 50 },
+      legend: { show: false },
+      grid: { left: 130, right: 80, top: 10, bottom: 30 },
       xAxis: { type: 'value', name: 'Mt C', nameLocation: 'end' },
       yAxis: { type: 'category', data: labels, axisLabel: { fontSize: 11 } },
       series: [
@@ -154,49 +122,92 @@ export function ForestBiomassChart({ rows }: Props) {
       ],
     };
 
-    return (
-      <div className="space-y-4">
-        {tabBar}
+    chartContent = (
+      <>
         {controls}
         <ReactECharts option={option} style={{ height: 440 }} notMerge />
+        {/* Custom 2-row legend */}
+        <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <span className="w-16 flex-shrink-0 text-xs font-bold" style={{ color: '#dc2626' }}>BAU</span>
+            <span className="inline-block h-3 w-5 flex-shrink-0 rounded opacity-65" style={{ background: '#dc2626' }}/>
+            <span className="text-xs text-slate-600">BAU 시나리오 탄소저장량 (반투명)</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="w-16 flex-shrink-0 text-xs font-bold" style={{ color: '#059669' }}>NetZero</span>
+            <span className="inline-block h-3 w-5 flex-shrink-0 rounded" style={{ background: '#059669' }}/>
+            <span className="text-xs text-slate-600">NetZero 시나리오 탄소저장량</span>
+          </div>
+        </div>
         <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
           <b>산림 탄소저장량 (바이오매스 대리 지표):</b> BAU 대비 NetZero 시나리오의 권역별 탄소저장 차이를 비교합니다.
         </div>
-      </div>
+      </>
+    );
+  } else {
+    const sc = isHistorical ? 'Historical' : (mode as 'BAU' | 'NetZero');
+    const yearData = getRegionData(rows, selectedYear, sc);
+
+    const singleOption = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params: { value: number; name: string }[]) =>
+          params.length ? `<b>${params[0].name}</b><br/>탄소저장량: <b>${params[0].value.toFixed(1)} Mt C</b>` : '',
+      },
+      legend: { show: false },
+      grid: { left: 130, right: 70, top: 10, bottom: 30 },
+      xAxis: { type: 'value', name: 'Mt C', nameLocation: 'end' },
+      yAxis: { type: 'category', data: yearData.map((d) => d.label), axisLabel: { fontSize: 11 } },
+      series: [{
+        type: 'bar',
+        data: yearData.map((d) => ({ value: d.value, itemStyle: { color: SC_COLOR[sc] } })),
+        label: { show: true, position: 'right', formatter: (p: { value: number }) => `${p.value.toFixed(0)}`, fontSize: 10 },
+        barMaxWidth: 30,
+      }],
+    };
+
+    chartContent = (
+      <>
+        {controls}
+        <ReactECharts option={singleOption} style={{ height: 420 }} notMerge />
+        <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
+          <b>산림 탄소저장량 (바이오매스 대리 지표):</b> 산림 생물체에 저장된 탄소의 총량.
+          중남미·러시아·캐나다 등 대규모 산림 권역이 글로벌 탄소저장고 역할을 담당합니다.
+        </div>
+      </>
     );
   }
 
-  // Single scenario chart
-  const sc = isHistorical ? 'Historical' : (mode as 'BAU' | 'NetZero');
-  const yearData = getRegionData(rows, selectedYear, sc);
+  /* ── GIS CONTENT ─────────────────────────────────────────── */
+  const gisContent = (
+    <>
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+        ⚠️ 공간 바이오매스 지도 데이터(GeoTIFF)는 국가별 래스터 파일로 제공되며,
+        현재 GIS 렌더링 파이프라인(geotiff.js + MapLibre GL) 구축 전입니다.
+      </div>
+      <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-green-200 bg-green-50">
+        <span className="text-5xl">🗺️</span>
+        <p className="text-base font-medium text-green-700">바이오매스 분포 지도 (GeoTIFF)</p>
+        <p className="max-w-sm text-center text-xs text-slate-500">
+          국가별 래스터 지도는{' '}
+          <code className="rounded bg-green-100 px-1">GeoTIFF_Outputs/</code> 디렉토리의 TIF 파일로 제공됩니다.
+        </p>
+      </div>
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
+        <p className="mb-2 font-semibold text-slate-700">📁 데이터 파일</p>
+        <p className="font-mono">{'{ISO3}'}_2050_Dashboard.tif &nbsp;— 국가별 2050년 전망 (150+ 국가)</p>
+        <p className="font-mono">{'{ISO3}'}_17Band_Historical.tif — 17개 밴드 실측 데이터</p>
+        <p className="mt-3 text-slate-500">GIS 파이프라인 구축 후 인터랙티브 지도로 시각화 예정입니다.</p>
+      </div>
+    </>
+  );
 
-  const singleOption = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      formatter: (params: { value: number; name: string }[]) =>
-        params.length ? `<b>${params[0].name}</b><br/>탄소저장량: <b>${params[0].value.toFixed(1)} Mt C</b>` : '',
-    },
-    grid: { left: 130, right: 70, top: 10, bottom: 30 },
-    xAxis: { type: 'value', name: 'Mt C', nameLocation: 'end' },
-    yAxis: { type: 'category', data: yearData.map((d) => d.label), axisLabel: { fontSize: 11 } },
-    series: [{
-      type: 'bar',
-      data: yearData.map((d) => ({ value: d.value, itemStyle: { color: SC_COLOR[sc] } })),
-      label: { show: true, position: 'right', formatter: (p: { value: number }) => `${p.value.toFixed(0)}`, fontSize: 10 },
-      barMaxWidth: 30,
-    }],
-  };
-
+  /* ── SINGLE RETURN ───────────────────────────────────────── */
   return (
     <div className="space-y-4">
       {tabBar}
-      {controls}
-      <ReactECharts option={singleOption} style={{ height: 420 }} notMerge />
-      <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
-        <b>산림 탄소저장량 (바이오매스 대리 지표):</b> 산림 생물체에 저장된 탄소의 총량.
-        중남미·러시아·캐나다 등 대규모 산림 권역이 글로벌 탄소저장고 역할을 담당합니다.
-      </div>
+      {subTab === 'chart' ? chartContent : gisContent}
     </div>
   );
 }

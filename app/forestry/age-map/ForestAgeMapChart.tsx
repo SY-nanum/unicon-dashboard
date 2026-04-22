@@ -50,10 +50,10 @@ export function ForestAgeMapChart({ rows }: Props) {
 
   const isHistorical = selectedYear <= 2020;
 
-  /* ── SUB-TAB BAR ─────────────────────────────────────────── */
+  /* ── TAB BAR ─────────────────────────────────────────────── */
   const tabBar = (
     <div className="flex gap-1 border-b border-slate-200">
-      {([['chart','📊 통계 차트'],['gis','🗺️ GIS 지도']] as [SubTab,string][]).map(([key, label]) => (
+      {([['chart', '📊 통계 차트'], ['gis', '🗺️ GIS 지도']] as [SubTab, string][]).map(([key, label]) => (
         <button key={key} onClick={() => setSubTab(key)}
           className={`px-4 py-2 text-sm font-medium transition-colors ${
             subTab === key
@@ -66,33 +66,7 @@ export function ForestAgeMapChart({ rows }: Props) {
     </div>
   );
 
-  /* ── GIS TAB ─────────────────────────────────────────────── */
-  if (subTab === 'gis') {
-    return (
-      <div className="space-y-4">
-        {tabBar}
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
-          ⚠️ 국가별 임령 분포 래스터 지도(GeoTIFF)는 별도 GIS 파이프라인으로 제공 예정입니다.
-        </div>
-        <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-green-200 bg-green-50">
-          <span className="text-5xl">🗺️</span>
-          <p className="text-base font-medium text-green-700">임령 분포 지도 (GeoTIFF)</p>
-          <p className="max-w-sm text-center text-xs text-slate-500">
-            국가별 래스터 지도는{' '}
-            <code className="rounded bg-green-100 px-1">GeoTIFF_Outputs/</code> 디렉토리의 TIF 파일로 제공됩니다.
-          </p>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
-          <p className="mb-2 font-semibold text-slate-700">📁 데이터 파일</p>
-          <p className="font-mono">{'{ISO3}'}_17Band_Historical.tif — 17개 밴드 실측 데이터</p>
-          <p className="font-mono">{'{ISO3}'}_2050_Dashboard.tif &nbsp;— 국가별 2050년 전망</p>
-          <p className="mt-3 text-slate-500">GIS 파이프라인 구축 후 인터랙티브 지도로 시각화 예정입니다.</p>
-        </div>
-      </div>
-    );
-  }
-
-  /* ── CHART TAB ───────────────────────────────────────────── */
+  /* ── CONTROLS ─────────────────────────────────────────────── */
   const controls = (
     <div className="flex flex-wrap items-center gap-4">
       <div>
@@ -127,7 +101,9 @@ export function ForestAgeMapChart({ rows }: Props) {
     </div>
   );
 
-  // Compare mode
+  /* ── CHART CONTENT ───────────────────────────────────────── */
+  let chartContent: React.ReactNode;
+
   if (!isHistorical && mode === 'compare') {
     const nzData  = buildData(rows, selectedYear, 'NetZero');
     const bauData = buildData(rows, selectedYear, 'BAU');
@@ -151,8 +127,6 @@ export function ForestAgeMapChart({ rows }: Props) {
       },
     ]);
 
-    const legendData = AGE_CLASSES.flatMap((ac) => [`BAU · ${ac.label}`, `NZ · ${ac.label}`]);
-
     const option = {
       tooltip: {
         trigger: 'axis',
@@ -164,17 +138,17 @@ export function ForestAgeMapChart({ rows }: Props) {
           return `<div class="text-xs"><b>${params[0].name}</b><br/>BAU 합계: <b>${bt.toFixed(2)} Mha</b><br/>NetZero 합계: <b>${nt.toFixed(2)} Mha</b></div>`;
         },
       },
-      legend: { bottom: 0, type: 'plain', data: legendData, textStyle: { fontSize: 9 }, itemWidth: 14 },
-      grid: { left: 120, right: 20, top: 10, bottom: 110 },
+      legend: { show: false },
+      grid: { left: 120, right: 20, top: 10, bottom: 20 },
       xAxis: { type: 'value', name: 'Million ha', nameLocation: 'end' },
       yAxis: { type: 'category', data: labels, axisLabel: { fontSize: 10 } },
       series: compareSeries,
     };
 
-    return (
-      <div className="space-y-4">
-        {tabBar}
+    chartContent = (
+      <>
         {controls}
+        {/* Compare mode marker */}
         <div className="flex items-center gap-6 rounded-lg border border-slate-100 bg-slate-50 px-4 py-2">
           <span className="text-xs font-semibold text-slate-500">막대 구분:</span>
           <span className="flex items-center gap-2 text-xs text-slate-700">
@@ -185,53 +159,116 @@ export function ForestAgeMapChart({ rows }: Props) {
           </span>
         </div>
         <ReactECharts option={option} style={{ height: 440 }} notMerge />
+        {/* Custom 2-row legend */}
+        <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="w-16 flex-shrink-0 text-xs font-bold" style={{ color: '#dc2626' }}>BAU</span>
+            {AGE_CLASSES.map((ac) => (
+              <span key={ac.key} className="flex items-center gap-1.5 text-xs text-slate-700">
+                <span className="inline-block h-3 w-5 flex-shrink-0 rounded opacity-55" style={{ background: ac.color }}/>
+                {ac.label}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="w-16 flex-shrink-0 text-xs font-bold" style={{ color: '#059669' }}>NetZero</span>
+            {AGE_CLASSES.map((ac) => (
+              <span key={ac.key} className="flex items-center gap-1.5 text-xs text-slate-700">
+                <span className="inline-block h-3 w-5 flex-shrink-0 rounded" style={{ background: ac.color }}/>
+                {ac.label}
+              </span>
+            ))}
+          </div>
+        </div>
         <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
           <b>임령지도 (Forest Age Map):</b> BAU(반투명)와 NetZero(불투명) 영급구조 차이를 권역별로 비교합니다.
         </div>
-      </div>
+      </>
+    );
+  } else {
+    const sc = isHistorical ? 'Historical' : (mode as 'BAU' | 'NetZero');
+    const regionData = buildData(rows, selectedYear, sc);
+    const yLabels = regionData.map((d) => d.label);
+
+    const singleOption = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params: { seriesName: string; value: number; name: string }[]) => {
+          if (!params.length) return '';
+          const total = params.reduce((s, p) => s + (p.value || 0), 0);
+          const lines = params.filter((p) => p.value > 0).map((p) => {
+            const pct = total > 0 ? ((p.value / total) * 100).toFixed(1) : '0';
+            return `${p.seriesName}: <b>${p.value.toFixed(2)} Mha</b> (${pct}%)`;
+          });
+          return `<div class="text-xs"><b>${params[0].name}</b><br/>${lines.join('<br/>')}</div>`;
+        },
+      },
+      legend: { show: false },
+      grid: { left: 120, right: 20, top: 10, bottom: 20 },
+      xAxis: { type: 'value', name: 'Million ha', nameLocation: 'end' },
+      yAxis: { type: 'category', data: yLabels, axisLabel: { fontSize: 10 } },
+      series: AGE_CLASSES.map((ac, idx) => ({
+        name: ac.label,
+        type: 'bar', stack: 'age',
+        data: regionData.map((d) => d.ages[idx]),
+        itemStyle: { color: ac.color },
+        barMaxWidth: 28,
+      })),
+    };
+
+    chartContent = (
+      <>
+        {controls}
+        <ReactECharts option={singleOption} style={{ height: 420 }} notMerge />
+        {/* Single-scenario legend */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-slate-100 bg-slate-50 px-4 py-2">
+          <span className="w-16 flex-shrink-0 text-xs font-bold"
+            style={{ color: isHistorical ? '#64748b' : mode === 'BAU' ? '#dc2626' : '#059669' }}>
+            {isHistorical ? '실적' : mode}
+          </span>
+          {AGE_CLASSES.map((ac) => (
+            <span key={ac.key} className="flex items-center gap-1.5 text-xs text-slate-700">
+              <span className="inline-block h-3 w-5 flex-shrink-0 rounded" style={{ background: ac.color }}/>
+              {ac.label}
+            </span>
+          ))}
+        </div>
+        <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
+          <b>임령지도 (Forest Age Map):</b> 산림의 나이별 면적 분포. 61년생 이상(장령림)이 탄소저장 밀도가 높습니다.
+        </div>
+      </>
     );
   }
 
-  // Single scenario
-  const sc = isHistorical ? 'Historical' : (mode as 'BAU' | 'NetZero');
-  const regionData = buildData(rows, selectedYear, sc);
-  const yLabels    = regionData.map((d) => d.label);
+  /* ── GIS CONTENT ─────────────────────────────────────────── */
+  const gisContent = (
+    <>
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+        ⚠️ 국가별 임령 분포 래스터 지도(GeoTIFF)는 별도 GIS 파이프라인으로 제공 예정입니다.
+      </div>
+      <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-green-200 bg-green-50">
+        <span className="text-5xl">🗺️</span>
+        <p className="text-base font-medium text-green-700">임령 분포 지도 (GeoTIFF)</p>
+        <p className="max-w-sm text-center text-xs text-slate-500">
+          국가별 래스터 지도는{' '}
+          <code className="rounded bg-green-100 px-1">GeoTIFF_Outputs/</code> 디렉토리의 TIF 파일로 제공됩니다.
+        </p>
+      </div>
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
+        <p className="mb-2 font-semibold text-slate-700">📁 데이터 파일</p>
+        <p className="font-mono">{'{ISO3}'}_17Band_Historical.tif — 17개 밴드 실측 데이터</p>
+        <p className="font-mono">{'{ISO3}'}_2050_Dashboard.tif &nbsp;— 국가별 2050년 전망</p>
+        <p className="mt-3 text-slate-500">GIS 파이프라인 구축 후 인터랙티브 지도로 시각화 예정입니다.</p>
+      </div>
+    </>
+  );
 
-  const singleOption = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      formatter: (params: { seriesName: string; value: number; name: string }[]) => {
-        if (!params.length) return '';
-        const total = params.reduce((s, p) => s + (p.value || 0), 0);
-        const lines = params.filter((p) => p.value > 0).map((p) => {
-          const pct = total > 0 ? ((p.value / total) * 100).toFixed(1) : '0';
-          return `${p.seriesName}: <b>${p.value.toFixed(2)} Mha</b> (${pct}%)`;
-        });
-        return `<div class="text-xs"><b>${params[0].name}</b><br/>${lines.join('<br/>')}</div>`;
-      },
-    },
-    legend: { bottom: 0, type: 'plain', data: AGE_CLASSES.map((a) => a.label), textStyle: { fontSize: 10 }, itemWidth: 16 },
-    grid: { left: 120, right: 20, top: 10, bottom: 65 },
-    xAxis: { type: 'value', name: 'Million ha', nameLocation: 'end' },
-    yAxis: { type: 'category', data: yLabels, axisLabel: { fontSize: 10 } },
-    series: AGE_CLASSES.map((ac, idx) => ({
-      name: ac.label,
-      type: 'bar', stack: 'age',
-      data: regionData.map((d) => d.ages[idx]),
-      itemStyle: { color: ac.color },
-      barMaxWidth: 28,
-    })),
-  };
-
+  /* ── SINGLE RETURN ───────────────────────────────────────── */
   return (
     <div className="space-y-4">
       {tabBar}
-      {controls}
-      <ReactECharts option={singleOption} style={{ height: 420 }} notMerge />
-      <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
-        <b>임령지도 (Forest Age Map):</b> 산림의 나이별 면적 분포. 61년생 이상(장령림)이 탄소저장 밀도가 높습니다.
-      </div>
+      {subTab === 'chart' ? chartContent : gisContent}
     </div>
   );
 }

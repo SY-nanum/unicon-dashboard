@@ -8,7 +8,6 @@ import { REGION_LABELS, REGION_ORDER } from '@/lib/forest/meta';
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
 
 interface Props { rows: ForestRow[] }
-
 type ScenarioMode = 'BAU' | 'NetZero' | 'compare';
 
 const SCENARIO_LINE = {
@@ -59,25 +58,20 @@ export function ForestAnnualFluxChart({ rows }: Props) {
       symbol: 'none',
       legendHoverLink: false,
       silent: true,
-      tooltip: { show: false },
     },
   ];
 
   selectedRegions.forEach((region) => {
     const color = REGION_COLORS[availableRegions.indexOf(region) % REGION_COLORS.length];
     const label = REGION_LABELS[region] ?? region;
-
     activeScenarios.forEach((scenario) => {
       const st = SCENARIO_LINE[scenario];
       const filtered = rows.filter((r) => r.region === region && r.scenario === scenario);
       if (!filtered.length) return;
       const dataMap = Object.fromEntries(filtered.map((r) => [r.year, r.value]));
-
       const lineColor = scenario === 'Historical' ? '#64748b' : color;
-      const suffix = scenario === 'Historical' ? ' (실적)' : mode === 'compare' ? ` · ${scenario}` : '';
-
       series.push({
-        name: `${label}${suffix}`,
+        name: `${scenario}::${label}`,
         type: 'line',
         data: allYears.map((y) => dataMap[y] ?? null),
         lineStyle: { color: lineColor, width: st.width, type: st.type },
@@ -89,35 +83,89 @@ export function ForestAnnualFluxChart({ rows }: Props) {
     });
   });
 
-  const legendBottom = mode === 'compare' && selectedRegions.length > 5 ? 100 : 65;
-
   const option = {
     tooltip: {
       trigger: 'axis',
       formatter: (params: { seriesName: string; value: number | null; axisValue: string }[]) => {
         if (!params.length) return '';
-        const lines = params
-          .filter((p) => p.value != null && p.seriesName !== '__zero__')
-          .map((p) => `${p.seriesName}: <b>${(p.value as number).toFixed(2)} Mt CO₂/yr</b>`);
+        const lines = params.filter((p) => p.value != null && !p.seriesName.startsWith('__')).map((p) => {
+          const [sc, region] = p.seriesName.split('::');
+          const scLabel = sc === 'Historical' ? '실적' : sc;
+          return `${region} (${scLabel}): <b>${(p.value as number).toFixed(2)} Mt CO₂/yr</b>`;
+        });
         return `<div class="text-xs"><b>${params[0].axisValue}년</b><br/>${lines.join('<br/>')}</div>`;
       },
     },
-    legend: {
-      bottom: 0,
-      type: 'plain',
-      textStyle: { fontSize: 10 },
-      itemWidth: 20,
-      formatter: (name: string) => name === '__zero__' ? '' : name,
-    },
-    grid: { left: 85, right: 20, bottom: legendBottom, top: 30 },
+    legend: { show: false },
+    grid: { left: 85, right: 20, bottom: 20, top: 30 },
     xAxis: { type: 'category', data: allYears.map(String), axisLabel: { rotate: 30 } },
     yAxis: { type: 'value', name: 'Mt CO₂/yr', nameLocation: 'middle', nameGap: 65 },
     series,
   };
 
+  const regionColor = (r: string) => REGION_COLORS[availableRegions.indexOf(r) % REGION_COLORS.length];
+
+  const CustomLegend = () => {
+    if (mode === 'compare') {
+      return (
+        <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="w-16 flex-shrink-0 text-xs font-bold" style={{ color: '#dc2626' }}>BAU</span>
+            {selectedRegions.map((r) => (
+              <span key={r} className="flex items-center gap-1.5 text-xs text-slate-700">
+                <svg width="22" height="8" className="flex-shrink-0">
+                  <line x1="0" y1="4" x2="22" y2="4" stroke={regionColor(r)} strokeWidth="2" strokeDasharray="5,3"/>
+                </svg>
+                {REGION_LABELS[r] ?? r}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="w-16 flex-shrink-0 text-xs font-bold" style={{ color: '#059669' }}>NetZero</span>
+            {selectedRegions.map((r) => (
+              <span key={r} className="flex items-center gap-1.5 text-xs text-slate-700">
+                <svg width="22" height="8" className="flex-shrink-0">
+                  <line x1="0" y1="4" x2="22" y2="4" stroke={regionColor(r)} strokeWidth="2.5"/>
+                </svg>
+                {REGION_LABELS[r] ?? r}
+              </span>
+            ))}
+          </div>
+          {showHistorical && (
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="w-16 flex-shrink-0 font-bold">실적</span>
+              <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#64748b" strokeWidth="2"/><circle cx="11" cy="4" r="2.5" fill="#64748b"/></svg>
+              실측값
+            </div>
+          )}
+        </div>
+      );
+    }
+    const lineStyle = mode === 'BAU' ? '5,3' : undefined;
+    const scColor   = mode === 'BAU' ? '#dc2626' : '#059669';
+    return (
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-slate-100 bg-slate-50 px-4 py-2">
+        <span className="w-16 flex-shrink-0 text-xs font-bold" style={{ color: scColor }}>{mode}</span>
+        {showHistorical && (
+          <span className="flex items-center gap-1.5 text-xs text-slate-500">
+            <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#64748b" strokeWidth="2"/><circle cx="11" cy="4" r="2.5" fill="#64748b"/></svg>
+            실적
+          </span>
+        )}
+        {selectedRegions.map((r) => (
+          <span key={r} className="flex items-center gap-1.5 text-xs text-slate-700">
+            <svg width="22" height="8" className="flex-shrink-0">
+              <line x1="0" y1="4" x2="22" y2="4" stroke={regionColor(r)} strokeWidth="2" strokeDasharray={lineStyle}/>
+            </svg>
+            {REGION_LABELS[r] ?? r}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-4">
-      {/* Scenario mode buttons */}
+    <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         {MODE_BTNS.map(({ key, label, color }) => (
           <button key={key} onClick={() => setMode(key)}
@@ -136,44 +184,23 @@ export function ForestAnnualFluxChart({ rows }: Props) {
         </button>
       </div>
 
-      {/* Compare legend guide */}
-      {mode === 'compare' && (
-        <div className="flex items-center gap-6 rounded-lg border border-slate-100 bg-slate-50 px-4 py-2">
-          <span className="text-xs font-semibold text-slate-500">선 구분:</span>
-          <span className="flex items-center gap-2 text-xs text-slate-700">
-            <svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#059669" strokeWidth="2.5"/></svg>
-            NetZero (실선)
-          </span>
-          <span className="flex items-center gap-2 text-xs text-slate-700">
-            <svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#dc2626" strokeWidth="2" strokeDasharray="5,3"/></svg>
-            BAU (점선)
-          </span>
-          <span className="text-xs text-slate-400">색상 = 권역</span>
-        </div>
-      )}
-
-      {/* Region selector */}
-      <div>
-        <p className="mb-1.5 text-xs font-semibold text-slate-500">권역 선택</p>
-        <div className="flex flex-wrap gap-1.5">
-          {availableRegions.map((r) => (
-            <button key={r} onClick={() => toggleRegion(r)}
-              className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                selectedRegions.includes(r)
-                  ? 'bg-green-600 text-white'
-                  : 'border border-green-300 text-slate-600 hover:bg-green-50'
-              }`}>
-              {REGION_LABELS[r] ?? r}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-1.5">
+        {availableRegions.map((r) => (
+          <button key={r} onClick={() => toggleRegion(r)}
+            className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+              selectedRegions.includes(r) ? 'text-white' : 'border border-green-300 text-slate-600 hover:bg-green-50'
+            }`}
+            style={selectedRegions.includes(r) ? { backgroundColor: regionColor(r) } : {}}>
+            {REGION_LABELS[r] ?? r}
+          </button>
+        ))}
       </div>
 
-      <ReactECharts option={option} style={{ height: 420 }} notMerge />
+      <ReactECharts option={option} style={{ height: 360 }} notMerge />
+      <CustomLegend />
 
       <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
         <b>연간 순흡수량 (Net Annual Flux):</b> 음수(−) = 탄소 흡수(Sink), 양수(+) = 탄소 방출(Source).
-        산림이 흡수하는 CO₂량이 클수록 기후변화 완화 기여도가 높습니다.
       </div>
     </div>
   );
