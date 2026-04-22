@@ -36,11 +36,11 @@ export const SECTORS: SectorMeta[] = [
     color: 'amber',
     icon: '⚡',
     charts: [
-      { slug: 'power-mix', title: '연도별\n전원 믹스' },
-      { slug: 'duck-curve', title: '시간대별 전력수급 현황\n(Duck Curve 포함)' },
-      { slug: 'lcoe', title: 'LCOE 및\n그리드 패리티' },
-      { slug: 'trade-flow', title: '동북아\n전력 융통량' },
-      { slug: 'regional-lcoe', title: '지역별\n발전단가' },
+      { slug: 'power-mix', title: '연도별\n전원 믹스', implemented: true },
+      { slug: 'duck-curve', title: '시간대별 전력수급 현황\n(Duck Curve 포함)', implemented: true },
+      { slug: 'lcoe', title: 'LCOE 및\n그리드 패리티', implemented: true },
+      { slug: 'trade-flow', title: '동북아\n전력 융통량', implemented: true },
+      { slug: 'regional-lcoe', title: '지역별\n발전단가', implemented: true },
     ],
   },
   {
