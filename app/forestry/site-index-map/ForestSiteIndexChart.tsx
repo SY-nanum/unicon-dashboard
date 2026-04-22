@@ -8,8 +8,8 @@ import { REGION_LABELS, REGION_ORDER } from '@/lib/forest/meta';
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
 
 interface Props {
-  stockRows: ForestRow[];   // Carbon Stock|Forest|Total
-  areaRows:  ForestRow[];   // Area|Forest|Age Class|* (all 4 age classes)
+  stockRows: ForestRow[];
+  areaRows:  ForestRow[];
 }
 
 type ScenarioMode = 'BAU' | 'NetZero' | 'compare';
@@ -43,9 +43,22 @@ const REGION_CENTROIDS: Record<string, [number, number]> = {
 
 interface GisPoint { region: string; label: string; value: number; lng: number; lat: number }
 
-function GisWorldMap({ data, unit, title }: { data: GisPoint[]; unit: string; title: string }) {
+function GisWorldMap({
+  data, bauData, nzData, compare = false, unit, title,
+}: {
+  data?: GisPoint[];
+  bauData?: GisPoint[];
+  nzData?: GisPoint[];
+  compare?: boolean;
+  unit: string;
+  title: string;
+}) {
   const divRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  const depKey = compare
+    ? JSON.stringify([...(bauData ?? []), ...(nzData ?? [])].map((d) => [d.region, d.value]))
+    : JSON.stringify((data ?? []).map((d) => [d.region, d.value]));
 
   useEffect(() => {
     let disposed = false;
@@ -57,49 +70,68 @@ function GisWorldMap({ data, unit, title }: { data: GisPoint[]; unit: string; ti
         const worldJson = await res.json();
         echarts.registerMap('world', worldJson as Parameters<typeof echarts.registerMap>[1]);
         if (disposed || !divRef.current) return;
+
         const chart = echarts.init(divRef.current);
-        const maxVal = Math.max(...data.map((d) => d.value), 1);
+        const allPts = compare ? [...(bauData ?? []), ...(nzData ?? [])] : (data ?? []);
+        const maxVal = Math.max(...allPts.map((d) => d.value), 1);
+        const bauMap = Object.fromEntries((bauData ?? []).map((d) => [d.region, d.value]));
+        const nzMap  = Object.fromEntries((nzData  ?? []).map((d) => [d.region, d.value]));
+
+        type SI = { name: string; label: string; value: [number, number, number]; bauVal?: number; nzVal?: number };
+
+        const mkSeries = (pts: GisPoint[], color: string, opacity: number, name: string, showLabel: boolean) => ({
+          name, type: 'scatter', coordinateSystem: 'geo',
+          data: pts.filter((d) => d.value > 0).map((d): SI => ({
+            name: d.region, label: d.label,
+            value: [d.lng, d.lat, d.value],
+            bauVal: bauMap[d.region], nzVal: nzMap[d.region],
+          })),
+          symbolSize: (val: number[]) => Math.max(8, Math.sqrt(val[2] / maxVal) * 56),
+          itemStyle: { color, opacity, borderColor: '#064e3b', borderWidth: 1 },
+          label: showLabel
+            ? { show: true, formatter: (p: { data?: SI }) => p.data?.label ?? '', position: 'top', fontSize: 9, color: '#1e293b' }
+            : { show: false },
+          emphasis: { scale: true },
+        });
+
+        const series = compare
+          ? [mkSeries(bauData ?? [], '#dc2626', 0.55, 'BAU', false), mkSeries(nzData ?? [], '#059669', 0.82, 'NetZero', true)]
+          : [mkSeries(data ?? [], '#15803d', 0.75, 'Value', true)];
+
         chart.setOption({
           backgroundColor: '#f0fdf4',
           title: { text: title, left: 'center', top: 8, textStyle: { fontSize: 12, color: '#374151' } },
           tooltip: {
             trigger: 'item',
-            formatter: (p: { data?: { label: string; value: [number, number, number] } }) =>
-              p.data ? `<b>${p.data.label}</b><br/>${p.data.value[2].toFixed(1)} ${unit}` : '',
+            formatter: (p: { data?: SI }) => {
+              if (!p.data) return '';
+              if (compare) {
+                return `<b>${p.data.label}</b><br/>BAU: <b>${(p.data.bauVal ?? 0).toFixed(1)} ${unit}</b><br/>NetZero: <b>${(p.data.nzVal ?? 0).toFixed(1)} ${unit}</b>`;
+              }
+              return `<b>${p.data.label}</b><br/>${p.data.value[2].toFixed(1)} ${unit}`;
+            },
           },
+          legend: compare ? { bottom: 8, data: ['BAU', 'NetZero'], textStyle: { fontSize: 11 } } : { show: false },
           geo: {
             map: 'world', roam: true, top: 40,
             itemStyle: { areaColor: '#dcfce7', borderColor: '#86efac', borderWidth: 0.5 },
             emphasis: { itemStyle: { areaColor: '#bbf7d0' }, label: { show: false } },
           },
-          series: [{
-            type: 'scatter', coordinateSystem: 'geo',
-            data: data.filter((d) => d.value > 0).map((d) => ({
-              name: d.region, label: d.label,
-              value: [d.lng, d.lat, d.value] as [number, number, number],
-            })),
-            symbolSize: (val: number[]) => Math.max(8, Math.sqrt(val[2] / maxVal) * 56),
-            itemStyle: { color: '#15803d', opacity: 0.72, borderColor: '#064e3b', borderWidth: 1 },
-            label: {
-              show: true,
-              formatter: (p: { data?: { label: string } }) => p.data?.label ?? '',
-              position: 'top', fontSize: 9, color: '#1e293b',
-            },
-            emphasis: { scale: true },
-          }],
+          series,
         });
+
         if (!disposed) setStatus('ready');
       } catch { if (!disposed) setStatus('error'); }
     }
     init();
     return () => { disposed = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(data.map((d) => [d.region, d.value])), unit]);
+  }, [depKey, compare, unit]);
 
   if (status === 'error') {
     return (
       <div className="flex h-60 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-700">
-        ⚠️ 지도 데이터를 불러오지 못했습니다. 네트워크 연결을 확인해 주세요.
+        ⚠️ 지도 데이터를 불러오지 못했습니다.
       </div>
     );
   }
@@ -110,27 +142,29 @@ function GisWorldMap({ data, unit, title }: { data: GisPoint[]; unit: string; ti
           🗺️ 세계 지도 로딩 중…
         </div>
       )}
-      <div ref={divRef} style={{ height: 420, width: '100%' }} />
+      <div ref={divRef} style={{ height: compare ? 450 : 420, width: '100%' }} />
     </div>
   );
 }
 
-/** Carbon Stock (Mt C) / Total Forest Area (Mha) = t C/ha (탄소밀도, 지위지수 대리지표) */
 function computeDensity(
-  stockRows: ForestRow[],
-  areaRows:  ForestRow[],
-  year: number,
-  scenario: 'BAU' | 'NetZero' | 'Historical',
+  stockRows: ForestRow[], areaRows: ForestRow[],
+  year: number, scenario: 'BAU' | 'NetZero' | 'Historical',
 ) {
   return REGION_ORDER.map((region) => {
-    const label  = REGION_LABELS[region] ?? region;
-    const stock  = stockRows.find((r) => r.region === region && r.year === year && r.scenario === scenario)?.value ?? 0;
-    const area   = areaRows.filter((r) => r.region === region && r.year === year && r.scenario === scenario)
-      .reduce((s, r) => s + r.value, 0);
-    // Mt C / Mha = t C / ha
+    const label   = REGION_LABELS[region] ?? region;
+    const stock   = stockRows.find((r) => r.region === region && r.year === year && r.scenario === scenario)?.value ?? 0;
+    const area    = areaRows.filter((r) => r.region === region && r.year === year && r.scenario === scenario).reduce((s, r) => s + r.value, 0);
     const density = area > 0 ? stock / area : 0;
-    return { region, label, density, stock, area };
+    return { region, label, density };
   }).filter((d) => d.density > 0).sort((a, b) => b.density - a.density);
+}
+
+function toGisPoints(data: ReturnType<typeof computeDensity>): GisPoint[] {
+  return data.map((d) => {
+    const [lng, lat] = REGION_CENTROIDS[d.region] ?? [0, 0];
+    return { region: d.region, label: d.label, value: d.density, lng, lat };
+  });
 }
 
 export function ForestSiteIndexChart({ stockRows, areaRows }: Props) {
@@ -146,9 +180,7 @@ export function ForestSiteIndexChart({ stockRows, areaRows }: Props) {
         <button key={key} onClick={() => setSubTab(key)}
           className={`px-4 py-2 text-sm font-medium transition-colors ${
             subTab === key ? 'border-b-2 border-green-600 text-green-700' : 'text-slate-500 hover:text-slate-700'
-          }`}>
-          {label}
-        </button>
+          }`}>{label}</button>
       ))}
     </div>
   );
@@ -167,7 +199,7 @@ export function ForestSiteIndexChart({ stockRows, areaRows }: Props) {
     </div>
   );
 
-  const scenarioSelector = (
+  const modeSelector = (
     <div>
       <p className="mb-1.5 text-xs font-semibold text-slate-500">시나리오</p>
       <div className="flex gap-1.5">
@@ -191,28 +223,26 @@ export function ForestSiteIndexChart({ stockRows, areaRows }: Props) {
     const labels  = nzData.map((d) => d.label);
     const bauMap  = Object.fromEntries(bauData.map((d) => [d.label, d.density]));
 
-    const option = {
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      legend: { show: false },
-      grid: { left: 130, right: 80, top: 10, bottom: 30 },
-      xAxis: { type: 'value', name: 't C/ha', nameLocation: 'end' },
-      yAxis: { type: 'category', data: labels, axisLabel: { fontSize: 11 } },
-      series: [
-        { name: 'BAU', type: 'bar',
-          data: labels.map((l) => ({ value: bauMap[l] ?? 0, itemStyle: { color: SC_COLOR.BAU, opacity: 0.65 } })),
-          label: { show: true, position: 'right', formatter: (p: { value: number }) => p.value.toFixed(1), fontSize: 10 },
-          barMaxWidth: 22 },
-        { name: 'NetZero', type: 'bar',
-          data: labels.map((l) => ({ value: nzData.find((d) => d.label === l)?.density ?? 0, itemStyle: { color: SC_COLOR.NetZero } })),
-          label: { show: true, position: 'right', formatter: (p: { value: number }) => p.value.toFixed(1), fontSize: 10 },
-          barMaxWidth: 22 },
-      ],
-    };
-
     chartContent = (
       <>
-        <div className="flex flex-wrap items-center gap-4">{yearSelector}{scenarioSelector}</div>
-        <ReactECharts option={option} style={{ height: 440 }} notMerge />
+        <div className="flex flex-wrap items-center gap-4">{yearSelector}{modeSelector}</div>
+        <ReactECharts option={{
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          legend: { show: false },
+          grid: { left: 130, right: 80, top: 10, bottom: 30 },
+          xAxis: { type: 'value', name: 't C/ha', nameLocation: 'end' },
+          yAxis: { type: 'category', data: labels, axisLabel: { fontSize: 11 } },
+          series: [
+            { name: 'BAU', type: 'bar',
+              data: labels.map((l) => ({ value: bauMap[l] ?? 0, itemStyle: { color: SC_COLOR.BAU, opacity: 0.65 } })),
+              label: { show: true, position: 'right', formatter: (p: { value: number }) => p.value.toFixed(1), fontSize: 10 },
+              barMaxWidth: 22 },
+            { name: 'NetZero', type: 'bar',
+              data: labels.map((l) => ({ value: nzData.find((d) => d.label === l)?.density ?? 0, itemStyle: { color: SC_COLOR.NetZero } })),
+              label: { show: true, position: 'right', formatter: (p: { value: number }) => p.value.toFixed(1), fontSize: 10 },
+              barMaxWidth: 22 },
+          ],
+        }} style={{ height: 440 }} notMerge />
         <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
           <div className="flex items-center gap-3">
             <span className="w-16 flex-shrink-0 text-xs font-bold" style={{ color: '#dc2626' }}>BAU</span>
@@ -225,90 +255,77 @@ export function ForestSiteIndexChart({ stockRows, areaRows }: Props) {
             <span className="text-xs text-slate-600">NetZero 탄소밀도</span>
           </div>
         </div>
+        <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
+          <b>탄소밀도 비교:</b> NetZero 시나리오에서 BAU 대비 탄소밀도가 증가하는 권역을 확인합니다.
+        </div>
       </>
     );
   } else {
     const sc   = isHistorical ? 'Historical' : (mode as 'BAU' | 'NetZero');
     const data = computeDensity(stockRows, areaRows, selectedYear, sc);
 
-    const option = {
-      tooltip: {
-        trigger: 'axis', axisPointer: { type: 'shadow' },
-        formatter: (params: { value: number; name: string }[]) =>
-          params.length ? `<b>${params[0].name}</b><br/>탄소밀도: <b>${params[0].value.toFixed(1)} t C/ha</b>` : '',
-      },
-      legend: { show: false },
-      grid: { left: 130, right: 70, top: 10, bottom: 30 },
-      xAxis: { type: 'value', name: 't C/ha', nameLocation: 'end' },
-      yAxis: { type: 'category', data: data.map((d) => d.label), axisLabel: { fontSize: 11 } },
-      series: [{ type: 'bar',
-        data: data.map((d) => ({ value: d.density, itemStyle: { color: SC_COLOR[sc] } })),
-        label: { show: true, position: 'right', formatter: (p: { value: number }) => p.value.toFixed(1), fontSize: 10 },
-        barMaxWidth: 30 }],
-    };
-
     chartContent = (
       <>
-        <div className="flex flex-wrap items-center gap-4">
-          {yearSelector}
-          {!isHistorical && scenarioSelector}
+        <div className="flex flex-wrap items-center gap-4">{yearSelector}{!isHistorical && modeSelector}</div>
+        <ReactECharts option={{
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+            formatter: (params: { value: number; name: string }[]) =>
+              params.length ? `<b>${params[0].name}</b><br/>탄소밀도: <b>${params[0].value.toFixed(1)} t C/ha</b>` : '' },
+          legend: { show: false },
+          grid: { left: 130, right: 70, top: 10, bottom: 30 },
+          xAxis: { type: 'value', name: 't C/ha', nameLocation: 'end' },
+          yAxis: { type: 'category', data: data.map((d) => d.label), axisLabel: { fontSize: 11 } },
+          series: [{ type: 'bar',
+            data: data.map((d) => ({ value: d.density, itemStyle: { color: SC_COLOR[sc] } })),
+            label: { show: true, position: 'right', formatter: (p: { value: number }) => p.value.toFixed(1), fontSize: 10 },
+            barMaxWidth: 30 }],
+        }} style={{ height: 420 }} notMerge />
+        <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
+          <b>탄소밀도 (지위지수 대리지표):</b> 단위 면적당 탄소저장량 (t C/ha).
         </div>
-        <ReactECharts option={option} style={{ height: 420 }} notMerge />
       </>
     );
   }
 
   /* ── GIS CONTENT ─────────────────────────────────────────── */
-  const gisSc    = isHistorical ? 'Historical' : (mode === 'compare' ? 'NetZero' : mode as 'BAU' | 'NetZero');
-  const gisData  = computeDensity(stockRows, areaRows, selectedYear, gisSc).map((d) => {
-    const [lng, lat] = REGION_CENTROIDS[d.region] ?? [0, 0];
-    return { region: d.region, label: d.label, value: d.density, lng, lat };
-  });
-  const gisTitle = `탄소밀도 — ${selectedYear}년 ${gisSc === 'Historical' ? '실적' : gisSc} (t C/ha)`;
+  const isCompare = !isHistorical && mode === 'compare';
+  const gisSc     = isHistorical ? 'Historical' : (isCompare ? 'NetZero' : mode as 'BAU' | 'NetZero');
+
+  const bauGis    = isCompare ? toGisPoints(computeDensity(stockRows, areaRows, selectedYear, 'BAU'))     : undefined;
+  const nzGis     = isCompare ? toGisPoints(computeDensity(stockRows, areaRows, selectedYear, 'NetZero')) : undefined;
+  const singleGis = !isCompare ? toGisPoints(computeDensity(stockRows, areaRows, selectedYear, gisSc))    : undefined;
+
+  const gisTitle = isCompare
+    ? `탄소밀도 — ${selectedYear}년 BAU(빨강) vs NetZero(초록) (t C/ha)`
+    : `탄소밀도 — ${selectedYear}년 ${gisSc === 'Historical' ? '실적' : gisSc} (t C/ha)`;
 
   const gisContent = (
     <>
-      <div className="flex flex-wrap items-center gap-4">
-        {yearSelector}
-        {!isHistorical && (
-          <div>
-            <p className="mb-1.5 text-xs font-semibold text-slate-500">시나리오</p>
-            <div className="flex gap-1.5">
-              {MODE_BTNS.filter((b) => b.key !== 'compare').map(({ key, label, color }) => (
-                <button key={key} onClick={() => setMode(key as ScenarioMode)}
-                  className={`rounded-full px-3 py-0.5 text-xs font-medium transition-colors ${(mode === key || (mode === 'compare' && key === 'NetZero')) ? 'text-white shadow' : 'border text-slate-600 hover:bg-slate-50'}`}
-                  style={(mode === key || (mode === 'compare' && key === 'NetZero')) ? { backgroundColor: color } : { borderColor: color }}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+        📊 <b>탄소밀도 = 탄소저장량 ÷ 산림면적 (t C/ha)</b> — 지위지수 대리지표
       </div>
-      <GisWorldMap data={gisData} unit="t C/ha" title={gisTitle} />
+      <div className="flex flex-wrap items-center gap-4">{yearSelector}{!isHistorical && modeSelector}</div>
+      {isCompare
+        ? <GisWorldMap compare bauData={bauGis} nzData={nzGis} unit="t C/ha" title={gisTitle} />
+        : <GisWorldMap data={singleGis} unit="t C/ha" title={gisTitle} />
+      }
       <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
-        <b>버블 크기</b> = 탄소밀도 (t C/ha). 드래그·스크롤로 확대/이동 가능합니다.
+        {isCompare
+          ? <><b>비교 모드:</b> 빨간 버블=BAU, 초록 버블=NetZero. 버블 위 마우스로 두 값을 동시에 확인합니다.</>
+          : <><b>버블 크기</b> = 탄소밀도 (t C/ha). 드래그·스크롤로 확대/이동 가능합니다.</>
+        }
       </div>
     </>
   );
 
-  /* ── SINGLE RETURN ───────────────────────────────────────── */
   return (
     <div className="space-y-4">
-      {/* Info banner */}
       <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800">
         <p className="font-semibold">📊 탄소밀도 = 지위지수 대리지표</p>
-        <p className="mt-1">
-          IAMC CSV에는 지위지수(Site Index) 변수가 없어 <b>탄소저장량 ÷ 산림면적 (t C/ha)</b>을
-          지위지수 대리지표로 표시합니다. 실제 지위지수 GeoTIFF 렌더링은 별도 파이프라인으로 제공 예정입니다.
-        </p>
+        <p className="mt-1">IAMC CSV에는 지위지수 변수가 없어 <b>탄소저장량 ÷ 산림면적 (t C/ha)</b>을 대리지표로 표시합니다.</p>
       </div>
       {tabBar}
       {subTab === 'chart' ? chartContent : gisContent}
-      <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
-        <b>탄소밀도 (Carbon Density):</b> 단위 면적당 탄소저장량 (t C/ha). 수치가 높을수록
-        산림 생산성·품질이 높음을 의미합니다. NetZero 시나리오에서 BAU 대비 탄소밀도가 증가합니다.
-      </div>
     </div>
   );
 }
