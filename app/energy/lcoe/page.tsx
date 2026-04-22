@@ -2,7 +2,7 @@ import { loadIamcSheet } from '@/lib/iamc/load';
 import { UniconCard } from '@/components/ui/UniconCard';
 import { EnergyLcoeChart } from './EnergyLcoeChart';
 
-const FILE = 'data/energy/KEI_Power_Yonsei.xlsx';
+const FILE = 'data/energy/KEI_Power_Yonsei_V2.xlsx';
 const SHEET = 'Table_Power_Annual';
 
 export default async function LcoePage() {
