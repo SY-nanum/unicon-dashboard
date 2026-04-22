@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ForestRow } from '@/lib/forest/load';
 import { REGION_LABELS, REGION_ORDER } from '@/lib/forest/meta';
 
@@ -47,12 +47,16 @@ const REGION_CENTROIDS: Record<string, [number, number]> = {
 interface GisPoint { region: string; label: string; value: number; lng: number; lat: number }
 
 function GisWorldMap({
-  data, bauData, nzData, compare = false, unit, title,
+  data, bauData, nzData, compare = false,
+  singleColor = '#16a34a', fixedMax,
+  unit, title,
 }: {
   data?: GisPoint[];
   bauData?: GisPoint[];
   nzData?: GisPoint[];
   compare?: boolean;
+  singleColor?: string;
+  fixedMax?: number;
   unit: string;
   title: string;
 }) {
@@ -76,7 +80,7 @@ function GisWorldMap({
 
         const chart = echarts.init(divRef.current);
         const allPts = compare ? [...(bauData ?? []), ...(nzData ?? [])] : (data ?? []);
-        const maxVal = Math.max(...allPts.map((d) => d.value), 1);
+        const maxVal = fixedMax ?? Math.max(...allPts.map((d) => d.value), 1);
         const bauMap = Object.fromEntries((bauData ?? []).map((d) => [d.region, d.value]));
         const nzMap  = Object.fromEntries((nzData  ?? []).map((d) => [d.region, d.value]));
 
@@ -89,7 +93,7 @@ function GisWorldMap({
             value: [d.lng, d.lat, d.value],
             bauVal: bauMap[d.region], nzVal: nzMap[d.region],
           })),
-          symbolSize: (val: number[]) => Math.max(8, Math.sqrt(val[2] / maxVal) * 56),
+          symbolSize: (val: number[]) => Math.max(6, Math.sqrt(val[2] / maxVal) * 60),
           itemStyle: { color, opacity, borderColor: '#064e3b', borderWidth: 1 },
           label: showLabel
             ? { show: true, formatter: (p: { data?: SI }) => p.data?.label ?? '', position: 'top', fontSize: 9, color: '#1e293b' }
@@ -99,7 +103,7 @@ function GisWorldMap({
 
         const series = compare
           ? [mkSeries(bauData ?? [], '#dc2626', 0.55, 'BAU', false), mkSeries(nzData ?? [], '#059669', 0.82, 'NetZero', true)]
-          : [mkSeries(data ?? [], '#16a34a', 0.75, 'Value', true)];
+          : [mkSeries(data ?? [], singleColor, 0.80, 'Value', true)];
 
         chart.setOption({
           backgroundColor: '#f0fdf4',
@@ -129,7 +133,7 @@ function GisWorldMap({
     init();
     return () => { disposed = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [depKey, compare, unit]);
+  }, [depKey, compare, singleColor, fixedMax, unit]);
 
   if (status === 'error') {
     return (
@@ -175,6 +179,17 @@ export function ForestAgeMapChart({ rows }: Props) {
   const [mode,         setMode]         = useState<ScenarioMode>('NetZero');
 
   const isHistorical = selectedYear <= 2020;
+
+  // Fixed max across all years & scenarios for consistent bubble sizing
+  const globalMax = useMemo(() => {
+    let mx = 1;
+    for (const y of TARGET_YEARS) {
+      for (const sc of ['BAU', 'NetZero', 'Historical'] as const) {
+        for (const d of buildData(rows, y, sc)) mx = Math.max(mx, d.total);
+      }
+    }
+    return mx;
+  }, [rows]);
 
   const tabBar = (
     <div className="flex gap-1 border-b border-slate-200">
@@ -326,8 +341,9 @@ export function ForestAgeMapChart({ rows }: Props) {
   }
 
   /* ── GIS CONTENT ─────────────────────────────────────────── */
-  const isCompare = !isHistorical && mode === 'compare';
-  const gisSc     = isHistorical ? 'Historical' : (isCompare ? 'NetZero' : mode as 'BAU' | 'NetZero');
+  const isCompare      = !isHistorical && mode === 'compare';
+  const gisSc          = isHistorical ? 'Historical' : (isCompare ? 'NetZero' : mode as 'BAU' | 'NetZero');
+  const gisBubbleColor = isHistorical ? '#64748b' : gisSc === 'BAU' ? '#dc2626' : '#059669';
 
   const bauGis    = isCompare ? toGisPoints(buildData(rows, selectedYear, 'BAU'))     : undefined;
   const nzGis     = isCompare ? toGisPoints(buildData(rows, selectedYear, 'NetZero')) : undefined;
@@ -341,13 +357,13 @@ export function ForestAgeMapChart({ rows }: Props) {
     <>
       <div className="flex flex-wrap items-center gap-4">{yearSelector}{!isHistorical && modeSelector}</div>
       {isCompare
-        ? <GisWorldMap compare bauData={bauGis} nzData={nzGis} unit="Mha" title={gisTitle} />
-        : <GisWorldMap data={singleGis} unit="Mha" title={gisTitle} />
+        ? <GisWorldMap compare bauData={bauGis} nzData={nzGis} fixedMax={globalMax} unit="Mha" title={gisTitle} />
+        : <GisWorldMap data={singleGis} singleColor={gisBubbleColor} fixedMax={globalMax} unit="Mha" title={gisTitle} />
       }
       <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
         {isCompare
           ? <><b>비교 모드:</b> 빨간 버블=BAU, 초록 버블=NetZero. 버블 위 마우스로 두 값을 동시에 확인합니다.</>
-          : <><b>버블 크기</b> = 전체 산림 면적 합계 (Mha). 드래그·스크롤로 확대/이동 가능합니다.</>
+          : <><b>버블 크기</b>는 전체 연도 기준 고정 스케일 — 연도 간 크기 비교 가능합니다.</>
         }
       </div>
     </>

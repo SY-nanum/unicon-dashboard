@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ForestRow } from '@/lib/forest/load';
 import { REGION_LABELS, REGION_ORDER } from '@/lib/forest/meta';
 
@@ -44,12 +44,16 @@ const REGION_CENTROIDS: Record<string, [number, number]> = {
 interface GisPoint { region: string; label: string; value: number; lng: number; lat: number }
 
 function GisWorldMap({
-  data, bauData, nzData, compare = false, unit, title,
+  data, bauData, nzData, compare = false,
+  singleColor = '#15803d', fixedMax,
+  unit, title,
 }: {
   data?: GisPoint[];
   bauData?: GisPoint[];
   nzData?: GisPoint[];
   compare?: boolean;
+  singleColor?: string;
+  fixedMax?: number;
   unit: string;
   title: string;
 }) {
@@ -73,7 +77,7 @@ function GisWorldMap({
 
         const chart = echarts.init(divRef.current);
         const allPts = compare ? [...(bauData ?? []), ...(nzData ?? [])] : (data ?? []);
-        const maxVal = Math.max(...allPts.map((d) => d.value), 1);
+        const maxVal = fixedMax ?? Math.max(...allPts.map((d) => d.value), 1);
         const bauMap = Object.fromEntries((bauData ?? []).map((d) => [d.region, d.value]));
         const nzMap  = Object.fromEntries((nzData  ?? []).map((d) => [d.region, d.value]));
 
@@ -96,7 +100,7 @@ function GisWorldMap({
 
         const series = compare
           ? [mkSeries(bauData ?? [], '#dc2626', 0.55, 'BAU', false), mkSeries(nzData ?? [], '#059669', 0.82, 'NetZero', true)]
-          : [mkSeries(data ?? [], '#15803d', 0.75, 'Value', true)];
+          : [mkSeries(data ?? [], singleColor, 0.80, 'Value', true)];
 
         chart.setOption({
           backgroundColor: '#f0fdf4',
@@ -126,7 +130,7 @@ function GisWorldMap({
     init();
     return () => { disposed = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [depKey, compare, unit]);
+  }, [depKey, compare, singleColor, fixedMax, unit]);
 
   if (status === 'error') {
     return (
@@ -173,6 +177,17 @@ export function ForestSiteIndexChart({ stockRows, areaRows }: Props) {
   const [mode,         setMode]         = useState<ScenarioMode>('NetZero');
 
   const isHistorical = selectedYear <= 2020;
+
+  // Fixed max across all years & scenarios for consistent bubble sizing
+  const globalMax = useMemo(() => {
+    let mx = 1;
+    for (const y of TARGET_YEARS) {
+      for (const sc of ['BAU', 'NetZero', 'Historical'] as const) {
+        for (const d of computeDensity(stockRows, areaRows, y, sc)) mx = Math.max(mx, d.density);
+      }
+    }
+    return mx;
+  }, [stockRows, areaRows]);
 
   const tabBar = (
     <div className="flex gap-1 border-b border-slate-200">
@@ -288,8 +303,9 @@ export function ForestSiteIndexChart({ stockRows, areaRows }: Props) {
   }
 
   /* ── GIS CONTENT ─────────────────────────────────────────── */
-  const isCompare = !isHistorical && mode === 'compare';
-  const gisSc     = isHistorical ? 'Historical' : (isCompare ? 'NetZero' : mode as 'BAU' | 'NetZero');
+  const isCompare      = !isHistorical && mode === 'compare';
+  const gisSc          = isHistorical ? 'Historical' : (isCompare ? 'NetZero' : mode as 'BAU' | 'NetZero');
+  const gisBubbleColor = isHistorical ? '#64748b' : gisSc === 'BAU' ? '#dc2626' : '#059669';
 
   const bauGis    = isCompare ? toGisPoints(computeDensity(stockRows, areaRows, selectedYear, 'BAU'))     : undefined;
   const nzGis     = isCompare ? toGisPoints(computeDensity(stockRows, areaRows, selectedYear, 'NetZero')) : undefined;
@@ -306,8 +322,8 @@ export function ForestSiteIndexChart({ stockRows, areaRows }: Props) {
       </div>
       <div className="flex flex-wrap items-center gap-4">{yearSelector}{!isHistorical && modeSelector}</div>
       {isCompare
-        ? <GisWorldMap compare bauData={bauGis} nzData={nzGis} unit="t C/ha" title={gisTitle} />
-        : <GisWorldMap data={singleGis} unit="t C/ha" title={gisTitle} />
+        ? <GisWorldMap compare bauData={bauGis} nzData={nzGis} fixedMax={globalMax} unit="t C/ha" title={gisTitle} />
+        : <GisWorldMap data={singleGis} singleColor={gisBubbleColor} fixedMax={globalMax} unit="t C/ha" title={gisTitle} />
       }
       <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
         {isCompare
