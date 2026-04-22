@@ -57,7 +57,7 @@ function GisWorldMap({ data, unit, title }: { data: GisPoint[]; unit: string; ti
     async function init() {
       try {
         const echarts = await import('echarts');
-        const res = await fetch('https://echarts.apache.org/examples/data/asset/geo/world.json');
+        const res = await fetch('/geo/world.json');
         if (!res.ok) throw new Error('fetch failed');
         const worldJson = await res.json();
         echarts.registerMap('world', worldJson as Parameters<typeof echarts.registerMap>[1]);
