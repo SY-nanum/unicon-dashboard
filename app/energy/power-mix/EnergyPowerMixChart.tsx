@@ -23,7 +23,7 @@ const TECH_GROUPS: { label: string; techs: string[]; color: string }[] = [
   { label: '태양광',       techs: ['Solar'],                      color: '#eab308' },
   { label: '풍력(육상)',   techs: ['WindOn'],                     color: '#06b6d4' },
   { label: '풍력(해상)',   techs: ['WindOff'],                    color: '#0284c7' },
-  { label: 'ESS/양수',     techs: ['ESS', 'PUMP'],                color: '#a78bfa' },
+  { label: 'ESS',           techs: ['ESS'],                        color: '#a78bfa' },
   { label: '기타',         techs: ['OCGT', 'oil', 'waste', 'HUCM'], color: '#cbd5e1' },
 ];
 

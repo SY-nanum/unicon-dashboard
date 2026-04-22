@@ -19,7 +19,14 @@ const FLOW_PAIRS = [
 export function EnergyTradeFlowChart({ annual, years }: Props) {
   const [view, setView] = useState<'absolute' | 'net'>('absolute');
 
-  // Net KOR balance per year (exports - imports)
+  if (!annual.length || !years.length) {
+    return <div className="py-8 text-center text-sm text-slate-400">교역 데이터가 없습니다.</div>;
+  }
+
+  // Convert GWh → TWh for display
+  const toTWh = (gwh: number) => Math.round((gwh / 1000) * 100) / 100;
+
+  // Net KOR balance per year (exports - imports), in TWh
   const netData = years.map((y) => {
     const korExport = annual
       .filter((a) => a.year === y && a.from === 'KOR')
@@ -27,7 +34,7 @@ export function EnergyTradeFlowChart({ annual, years }: Props) {
     const korImport = annual
       .filter((a) => a.year === y && a.to === 'KOR')
       .reduce((s, a) => s + a.gwh, 0);
-    return Math.round((korExport - korImport) * 10) / 10;
+    return Math.round(((korExport - korImport) / 1000) * 100) / 100;
   });
 
   const absoluteSeries: object[] = FLOW_PAIRS.map((fp) => ({
@@ -35,7 +42,7 @@ export function EnergyTradeFlowChart({ annual, years }: Props) {
     type: 'bar',
     data: years.map((y) => {
       const row = annual.find((a) => a.year === y && a.from === fp.from && a.to === fp.to);
-      return row ? Math.round(row.gwh * 10) / 10 : 0;
+      return row ? toTWh(row.gwh) : 0;
     }),
     itemStyle: { color: fp.color },
     barMaxWidth: 35,
@@ -53,8 +60,8 @@ export function EnergyTradeFlowChart({ annual, years }: Props) {
       barMaxWidth: 40,
       label: {
         show: true,
-        position: (params: { value: number }) => (params.value >= 0 ? 'top' : 'bottom'),
-        formatter: (params: { value: number }) => `${params.value.toFixed(0)}`,
+        position: 'top' as const,
+        formatter: (params: { value: number }) => `${params.value.toFixed(1)}`,
         fontSize: 10,
       },
     },
@@ -68,8 +75,8 @@ export function EnergyTradeFlowChart({ annual, years }: Props) {
         if (!params.length) return '';
         const year = params[0].axisValue;
         const lines = params
-          .filter((p) => p.value > 1)
-          .map((p) => `${p.seriesName}: <b>${(p.value / 1000).toFixed(2)} TWh/yr</b>`);
+          .filter((p) => p.value > 0.01)
+          .map((p) => `${p.seriesName}: <b>${p.value.toFixed(1)} TWh/yr</b>`);
         return `<div class="text-xs"><b>${year}년</b><br/>${lines.join('<br/>')}</div>`;
       },
     },
@@ -78,7 +85,7 @@ export function EnergyTradeFlowChart({ annual, years }: Props) {
     xAxis: { type: 'category', data: years.map(String) },
     yAxis: {
       type: 'value',
-      name: 'GWh/yr',
+      name: 'TWh/yr',
       nameLocation: 'middle',
       nameGap: 60,
     },
@@ -93,14 +100,14 @@ export function EnergyTradeFlowChart({ annual, years }: Props) {
         if (!params.length) return '';
         const { axisValue, value } = params[0];
         const dir = value >= 0 ? '순수출 (수출 우세)' : '순수입 (수입 우세)';
-        return `<div class="text-xs"><b>${axisValue}년</b><br/>${dir}: <b>${Math.abs(value / 1000).toFixed(2)} TWh/yr</b></div>`;
+        return `<div class="text-xs"><b>${axisValue}년</b><br/>${dir}: <b>${Math.abs(value).toFixed(1)} TWh/yr</b></div>`;
       },
     },
     grid: { left: 75, right: 20, bottom: 45, top: 20 },
     xAxis: { type: 'category', data: years.map(String) },
     yAxis: {
       type: 'value',
-      name: 'GWh/yr',
+      name: 'TWh/yr',
       nameLocation: 'middle',
       nameGap: 60,
     },
