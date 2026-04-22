@@ -9,61 +9,77 @@ const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
 
 interface Props { rows: ForestRow[] }
 
-const SCENARIO_STYLE: Record<string, { color: string; lineType: 'solid' | 'dashed'; width: number }> = {
-  Historical: { color: '#64748b', lineType: 'solid',  width: 3 },
-  BAU:        { color: '#dc2626', lineType: 'dashed', width: 2 },
-  NetZero:    { color: '#059669', lineType: 'dashed', width: 2 },
+type ScenarioMode = 'BAU' | 'NetZero' | 'compare';
+
+const SCENARIO_LINE = {
+  Historical: { color: '#64748b', type: 'solid'  as const, width: 2,   symbol: 'circle' as const },
+  BAU:        { color: '#dc2626', type: 'dashed'  as const, width: 2,   symbol: 'none'   as const },
+  NetZero:    { color: '#059669', type: 'solid'   as const, width: 2.5, symbol: 'none'   as const },
 };
 
 const REGION_COLORS = [
-  '#ef4444', '#f97316', '#eab308', '#22c55e',
-  '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899',
-  '#06b6d4', '#84cc16', '#f59e0b', '#10b981',
-  '#6366f1', '#94a3b8',
+  '#ef4444','#f97316','#eab308','#22c55e',
+  '#14b8a6','#3b82f6','#8b5cf6','#ec4899',
+  '#06b6d4','#84cc16','#f59e0b','#10b981',
+  '#6366f1','#94a3b8',
 ];
 
 const DEFAULT_REGIONS = ['Republic of Korea', 'Japan', 'China', 'USA', 'Latin America'];
 
 export function ForestAnnualFluxChart({ rows }: Props) {
-  const availableRegions = REGION_ORDER.filter((r) =>
-    rows.some((row) => row.region === r),
-  );
+  const availableRegions = REGION_ORDER.filter((r) => rows.some((row) => row.region === r));
   const [selectedRegions, setSelectedRegions] = useState<string[]>(DEFAULT_REGIONS);
-  const [selectedScenarios, setSelectedScenarios] = useState<('Historical' | 'BAU' | 'NetZero')[]>(
-    ['Historical', 'BAU', 'NetZero'],
-  );
+  const [mode, setMode] = useState<ScenarioMode>('compare');
+  const [showHistorical, setShowHistorical] = useState(true);
 
-  const toggleRegion = (r: string) => {
-    setSelectedRegions((prev) =>
-      prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r],
-    );
-  };
-  const toggleScenario = (s: 'Historical' | 'BAU' | 'NetZero') => {
-    setSelectedScenarios((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
-    );
-  };
+  const toggleRegion = (r: string) =>
+    setSelectedRegions((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]);
 
   const allYears = [...new Set(rows.map((r) => r.year))].sort((a, b) => a - b);
 
-  const series: object[] = [];
+  const activeScenarios: ('Historical' | 'BAU' | 'NetZero')[] = [
+    ...(showHistorical ? ['Historical' as const] : []),
+    ...(mode === 'BAU' ? ['BAU' as const] : []),
+    ...(mode === 'NetZero' ? ['NetZero' as const] : []),
+    ...(mode === 'compare' ? ['BAU' as const, 'NetZero' as const] : []),
+  ];
+
+  const series: object[] = [
+    // Zero reference line
+    {
+      name: '__zero__',
+      type: 'line',
+      data: allYears.map(() => 0),
+      lineStyle: { color: '#94a3b8', width: 1, type: 'dotted' },
+      itemStyle: { opacity: 0 },
+      symbol: 'none',
+      legendHoverLink: false,
+      silent: true,
+    },
+  ];
+
   selectedRegions.forEach((region) => {
     const color = REGION_COLORS[availableRegions.indexOf(region) % REGION_COLORS.length];
     const label = REGION_LABELS[region] ?? region;
 
-    selectedScenarios.forEach((scenario) => {
-      const st = SCENARIO_STYLE[scenario];
+    activeScenarios.forEach((scenario) => {
+      const st = SCENARIO_LINE[scenario];
       const filtered = rows.filter((r) => r.region === region && r.scenario === scenario);
       if (!filtered.length) return;
       const dataMap = Object.fromEntries(filtered.map((r) => [r.year, r.value]));
 
+      const seriesColor = scenario === 'Historical' ? st.color : color;
+      const scenarioLabel =
+        scenario === 'Historical' ? '실적' :
+        mode === 'compare' ? scenario : '';
+
       series.push({
-        name: `${label} (${scenario === 'Historical' ? '실적' : scenario})`,
+        name: scenarioLabel ? `${label} (${scenarioLabel})` : label,
         type: 'line',
         data: allYears.map((y) => dataMap[y] ?? null),
-        lineStyle: { color, width: st.width, type: st.lineType },
-        itemStyle: { color },
-        symbol: scenario === 'Historical' ? 'circle' : 'none',
+        lineStyle: { color: seriesColor, width: st.width, type: st.type },
+        itemStyle: { color: seriesColor },
+        symbol: st.symbol,
         symbolSize: 5,
         connectNulls: false,
       });
@@ -75,46 +91,56 @@ export function ForestAnnualFluxChart({ rows }: Props) {
       trigger: 'axis',
       formatter: (params: { seriesName: string; value: number | null; axisValue: string }[]) => {
         if (!params.length) return '';
-        const year = params[0].axisValue;
         const lines = params
-          .filter((p) => p.value != null)
+          .filter((p) => p.value != null && p.seriesName !== '__zero__')
           .map((p) => `${p.seriesName}: <b>${(p.value as number).toFixed(2)} Mt CO₂/yr</b>`);
-        return `<div class="text-xs"><b>${year}년</b><br/>${lines.join('<br/>')}</div>`;
+        return `<div class="text-xs"><b>${params[0].axisValue}년</b><br/>${lines.join('<br/>')}</div>`;
       },
     },
     legend: { bottom: 0, type: 'scroll', textStyle: { fontSize: 10 } },
-    grid: { left: 85, right: 20, bottom: 60, top: 40 },
-    xAxis: {
-      type: 'category',
-      data: allYears.map(String),
-      axisLabel: { rotate: 30 },
-    },
-    yAxis: {
-      type: 'value',
-      name: 'Mt CO₂/yr',
-      nameLocation: 'middle',
-      nameGap: 65,
-    },
-    // Zero reference line
-    markLine: { silent: true },
-    series: [
-      // Zero line as a reference
-      {
-        name: '__zero__',
-        type: 'line',
-        data: allYears.map(() => 0),
-        lineStyle: { color: '#94a3b8', width: 1, type: 'dotted' },
-        itemStyle: { opacity: 0 },
-        symbol: 'none',
-        legendHoverLink: false,
-        silent: true,
-      },
-      ...series,
-    ],
+    grid: { left: 85, right: 20, bottom: 65, top: 30 },
+    xAxis: { type: 'category', data: allYears.map(String), axisLabel: { rotate: 30 } },
+    yAxis: { type: 'value', name: 'Mt CO₂/yr', nameLocation: 'middle', nameGap: 65 },
+    series,
   };
+
+  const MODE_BTNS: { key: ScenarioMode; label: string; color: string }[] = [
+    { key: 'BAU',     label: 'BAU만',            color: '#dc2626' },
+    { key: 'NetZero', label: 'NetZero만',         color: '#059669' },
+    { key: 'compare', label: 'BAU + NetZero 비교', color: '#2563eb' },
+  ];
 
   return (
     <div className="space-y-4">
+      {/* Scenario mode */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-1.5">
+          {MODE_BTNS.map(({ key, label, color }) => (
+            <button
+              key={key}
+              onClick={() => setMode(key)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                mode === key ? 'text-white shadow' : 'border text-slate-600 hover:bg-slate-50'
+              }`}
+              style={mode === key ? { backgroundColor: color } : { borderColor: color }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setShowHistorical((v) => !v)}
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            showHistorical ? 'bg-slate-500 text-white' : 'border border-slate-400 text-slate-500 hover:bg-slate-50'
+          }`}
+        >
+          실적 {showHistorical ? '포함' : '숨김'}
+        </button>
+        {mode === 'compare' && (
+          <span className="text-xs text-slate-400">실선 = NetZero &nbsp;|&nbsp; 점선 = BAU</span>
+        )}
+      </div>
+
       {/* Region selector */}
       <div>
         <p className="mb-1.5 text-xs font-semibold text-slate-500">권역 선택</p>
@@ -135,31 +161,11 @@ export function ForestAnnualFluxChart({ rows }: Props) {
         </div>
       </div>
 
-      {/* Scenario selector */}
-      <div className="flex gap-2">
-        {(['Historical', 'BAU', 'NetZero'] as const).map((s) => {
-          const st = SCENARIO_STYLE[s];
-          return (
-            <button
-              key={s}
-              onClick={() => toggleScenario(s)}
-              className={`rounded-full px-3 py-0.5 text-xs font-medium transition-colors ${
-                selectedScenarios.includes(s) ? 'text-white' : 'border text-slate-500 hover:bg-slate-50'
-              }`}
-              style={selectedScenarios.includes(s) ? { backgroundColor: st.color } : { borderColor: st.color }}
-            >
-              {s === 'Historical' ? '실적' : s}
-            </button>
-          );
-        })}
-      </div>
-
       <ReactECharts option={option} style={{ height: 380 }} notMerge />
 
       <div className="rounded-lg bg-green-50 p-3 text-xs text-green-800">
         <b>연간 순흡수량 (Net Annual Flux):</b> 음수(−) = 탄소 흡수(Sink), 양수(+) = 탄소 방출(Source).
         산림이 흡수하는 CO₂량이 클수록 기후변화 완화 기여도가 높습니다.
-        중남미·캐나다·러시아 등 대규모 산림국의 흡수량 변화에 주목하세요.
       </div>
     </div>
   );
